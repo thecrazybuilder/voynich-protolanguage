@@ -15,5 +15,5 @@ By [@thecrazybuilder](https://github.com/thecrazybuilder) with Cipher Breaker
 
 The full Voynich proto-language glossary (200+ words) with inferred meanings:
 
-- [📄 PDF version (readable)](./voynich_lexicon (1).pdf)
+- [📄 PDF version (readable)](./voynich_lexicon_book_inferred.pdf)
 - [📄 LaTeX source (editable)](./voynich_lexicon_book_inferred.tex)
