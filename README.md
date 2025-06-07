@@ -11,3 +11,6 @@ By [@thecrazybuilder](https://github.com/thecrazybuilder) with Cipher Breaker
 
 > Not a confirmed translation, but a functional, scalable system for decoding and testing linguistic hypotheses against Voynich text.
 
+📘 **Compiled Lexicon Book**  
+A PDF version of the inferred Voynich proto-language glossary.  
+[📄 Download the Lexicon PDF](./voynich_lexicon_book_inferred.pdf)
