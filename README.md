@@ -13,4 +13,4 @@ By [@thecrazybuilder](https://github.com/thecrazybuilder) with Cipher Breaker
 
 📘 **Compiled Lexicon Book**  
 A PDF version of the inferred Voynich proto-language glossary.  
-[📄 Download the Lexicon PDF](./voynich_lexicon_book_inferred.pdf)
+[📄 Download the Lexicon PDF](.https://github.com/thecrazybuilder/voynich-protolanguage/blob/main/voynich_lexicon_book_inferred.tex)
