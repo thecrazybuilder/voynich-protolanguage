@@ -1,0 +1,16 @@
+{
+  "test": "Null Hypothesis — Same hill climbing method across 6 languages",
+  "parameters": "10K iterations x 2 restarts per language, 200 words from 3 folios",
+  "note": "This is a LIGHTWEIGHT test. Full Phase 4 used 1M iterations x 8 restarts on 9 folios with compound tokens. This test uses only single-character mappings for a fair apples-to-apples comparison.",
+  "results": {
+    "italian":    {"exact_matches": 2, "score": 2985, "top": ["un(3)", "lo(1)"]},
+    "french":     {"exact_matches": 3, "score": 2762, "top": ["par(14)", "un(3)", "les(2)"]},
+    "spanish":    {"exact_matches": 2, "score": 2624, "top": ["de(3)", "su(1)"]},
+    "german":     {"exact_matches": 2, "score": 2354, "top": ["dem(6)", "des(1)"]},
+    "portuguese": {"exact_matches": 1, "score": 2639, "top": ["das(2)"]},
+    "latin":      {"exact_matches": 0, "score": 2179, "top": []}
+  },
+  "ranking_by_exact": ["french(3)", "italian(2)", "spanish(2)", "german(2)", "portuguese(1)", "latin(0)"],
+  "ranking_by_score": ["italian(2985)", "french(2762)", "portuguese(2639)", "spanish(2624)", "german(2354)", "latin(2179)"],
+  "interpretation": "At 10K iterations with single-char mapping only, Italian leads on bigram score but French actually finds MORE exact dictionary matches (3 vs 2). This means the Italian advantage seen in Phase 4 (9 exact matches) comes primarily from the COMPOUND TOKEN optimization (treating daiin, qokeey, chedy etc as single units), not from single-character mapping alone. The compound token step is where vino, della, miele emerge — and that step was only run for Italian. To be rigorous, compound token optimization should be run for all 6 languages. Without that, the 9x Italian advantage is not yet confirmed by this null test."
+}
