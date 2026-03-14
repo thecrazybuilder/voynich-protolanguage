@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voynich Decipherment Toolkit</title>
+<style>
+:root {
+  --bg:#fafaf8;--bg2:#f1efe8;--bg3:#e8e6df;--text:#1a1a18;--text2:#5f5e5a;--text3:#888780;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.06);
+  --purple:#534AB7;--purple-bg:#EEEDFE;--purple-text:#3C3489;
+  --teal:#1D9E75;--teal-bg:#E1F5EE;--teal-text:#0F6E56;
+  --coral:#D85A30;--coral-bg:#FAECE7;--coral-text:#712B13;
+  --blue:#378ADD;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --amber-bg:#FAEEDA;--amber-text:#854F0B;
+  --pink-bg:#FBEAF0;--pink-text:#993556;
+  --green-bg:#EAF3DE;--green-text:#3B6D11;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-text:#791F1F;
+  --mono:'SF Mono','Fira Code','Menlo',monospace;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1a1a18;--bg2:#2c2c2a;--bg3:#3d3d3a;--text:#e8e6df;--text2:#b4b2a9;--text3:#888780;
+  --border:rgba(255,255,255,0.12);--border2:rgba(255,255,255,0.06);
+  --purple-bg:#26215C;--purple-text:#CECBF6;--teal-bg:#04342C;--teal-text:#9FE1CB;
+  --coral-bg:#4A1B0C;--coral-text:#F5C4B3;--blue-bg:#042C53;--blue-text:#B5D4F4;
+  --amber-bg:#412402;--amber-text:#FAC775;--pink-bg:#4B1528;--pink-text:#F4C0D1;
+  --green-bg:#173404;--green-text:#C0DD97;--red-bg:#501313;--red-text:#F7C1C1;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.container{max-width:900px;margin:0 auto;padding:1.5rem}
+h1{font-size:22px;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}
+.sub{font-size:13px;color:var(--text2);margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border2)}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:20px;border-bottom:1px solid var(--border2);padding-bottom:8px}
+.tab{padding:6px 14px;font-size:13px;border:none;cursor:pointer;border-radius:8px;background:transparent;color:var(--text2);font-weight:400;transition:all .15s;white-space:nowrap;font-family:inherit}
+.tab:hover{background:var(--bg2)}
+.tab.on{background:var(--purple-bg);color:var(--purple-text);font-weight:500}
+.panel{display:none}.panel.on{display:block}
+.card{background:var(--bg2);border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:8px}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+select,input[type=number]{font-family:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);width:100%}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
+button{font-family:inherit;font-size:13px;padding:8px 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer;font-weight:500;transition:all .15s}
+button:hover{background:var(--bg2)}
+button.primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+button.primary:hover{opacity:.9}
+button.danger{background:var(--red);color:#fff;border-color:var(--red)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:200px}
+.mono{font-family:var(--mono)}
+.output-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12px;line-height:1.8;min-height:120px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.mapping-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
+.map-cell{display:flex;align-items:center;gap:4px;font-size:12px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px}
+.map-cell .eva{font-family:var(--mono);font-weight:600;min-width:24px}
+.map-cell input{width:36px;padding:3px 4px;font-size:12px;font-family:var(--mono);text-align:center;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)}
+.map-cell .arrow{color:var(--text3);font-size:10px}
+.score-bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;margin:6px 0}
+.score-fill{height:100%;border-radius:3px;transition:width .3s}
+.badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;display:inline-block}
+.log{font-family:var(--mono);font-size:11px;line-height:1.6;max-height:200px;overflow-y:auto;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text2)}
+.stats-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.stat{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;flex:1;min-width:100px}
+.stat-label{font-size:11px;color:var(--text3)}
+.stat-val{font-size:18px;font-weight:600}
+.sample-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sample-btn{padding:4px 10px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text2);cursor:pointer;font-family:inherit}
+.sample-btn:hover,.sample-btn.on{background:var(--purple-bg);color:var(--purple-text);border-color:transparent}
+.progress{position:relative;height:24px;background:var(--bg3);border-radius:6px;overflow:hidden;margin:10px 0}
+.progress-fill{height:100%;background:var(--purple);transition:width .1s;border-radius:6px}
+.progress-text{position:absolute;top:0;left:0;right:0;text-align:center;font-size:11px;line-height:24px;color:var(--text);font-weight:500}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Voynich decipherment toolkit</h1>
+<div class="sub">Three methods. Three target languages. Real EVA transcription data from the manuscript.</div>
+<div class="tabs" id="tabs"></div>
+
+<!-- ======================== FREQUENCY SUBSTITUTION ======================== -->
+<div class="panel on" id="p-freq">
+  <div class="card">
+    <div class="card-title">Frequency-based substitution cipher</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Maps EVA characters to target language letters by matching their frequency ranks. You can manually adjust any mapping below.</p>
+    <div class="row" style="margin-bottom:12px">
+      <div class="col" style="max-width:200px">
+        <label>Target language</label>
+        <select id="freq-lang" onchange="initFreqMap()">
+          <option value="latin">Latin</option>
+          <option value="italian">Italian</option>
+          <option value="hebrew">Hebrew</option>
+        </select>
+      </div>
+      <div class="col" style="max-width:200px">
+        <label>Sample text</label>
+        <select id="freq-sample" onchange="decodeFreq()">
+          <option value="herbal">Herbal (f1r)</option>
+          <option value="bio">Biological (f75r)</option>
+          <option value="pharma">Pharmaceutical (f99r)</option>
+          <option value="astro">Astronomical (f67r)</option>
+          <option value="recipe">Recipes (f103r)</option>
+        </select>
+      </div>
+      <div class="col" style="display:flex;align-items:flex-end;gap:8px">
+        <button class="primary" onclick="decodeFreq()">Decode</button>
+        <button onclick="initFreqMap()">Reset mapping</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Character mapping <span style="font-size:11px;color:var(--text3)">(click any cell to edit)</span></div>
+    <div class="mapping-grid" id="freq-map-grid"></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="card-title" style="margin-bottom:6px">EVA source text</div>
+      <div class="output-box" id="freq-source"></div>
+    </div>
+    <div class="col">
+      <div class="card-title" style="margin-bottom:6px">Decoded output</div>
+      <div class="output-box" id="freq-output" style="color:var(--purple)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SYLLABARY ======================== -->
+<div class="panel" id="p-syl">
+  <div class="card">
+    <div class="card-title">Syllabary decoder</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Treats common EVA character sequences as syllable blocks and maps them to syllables in the target language. Based on the observation that Voynich "characters" may encode syllables rather than individual phonemes.</p>
+    <div class="row" style="margin-bottom:12px">
+      <div class="col" style="max-width:200px">
+        <label>Target language</label>
+        <select id="syl-lang" onchange="initSylMap()">
+          <option value="latin">Latin</option>
+          <option value="italian">Italian</option>
+          <option value="hebrew">Hebrew</option>
+        </select>
+      </div>
+      <div class="col" style="display:flex;align-items:flex-end;gap:8px">
+        <button class="primary" onclick="decodeSyl()">Decode</button>
+        <button onclick="initSylMap()">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Syllable mapping</div>
+    <div class="mapping-grid" id="syl-map-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="card-title" style="margin-bottom:6px">EVA source</div>
+      <div class="output-box" id="syl-source"></div>
+    </div>
+    <div class="col">
+      <div class="card-title" style="margin-bottom:6px">Syllabary output</div>
+      <div class="output-box" id="syl-output" style="color:var(--teal-text)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== HILL CLIMBING ======================== -->
+<div class="panel" id="p-hill">
+  <div class="card">
+    <div class="card-title">Hill-climbing brute force</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Automatically tests millions of random character swaps, keeping changes that make the output look more like the target language. Uses bigram/trigram frequency scoring.</p>
+    <div class="row" style="margin-bottom:12px">
+      <div class="col" style="max-width:180px">
+        <label>Target language</label>
+        <select id="hill-lang">
+          <option value="latin">Latin</option>
+          <option value="italian">Italian</option>
+          <option value="hebrew">Hebrew</option>
+        </select>
+      </div>
+      <div class="col" style="max-width:140px">
+        <label>Iterations</label>
+        <select id="hill-iters">
+          <option value="50000">50,000</option>
+          <option value="200000" selected>200,000</option>
+          <option value="500000">500,000</option>
+          <option value="1000000">1,000,000</option>
+        </select>
+      </div>
+      <div class="col" style="max-width:140px">
+        <label>Temperature</label>
+        <select id="hill-temp">
+          <option value="2">Hot (explore more)</option>
+          <option value="1" selected>Medium</option>
+          <option value="0.5">Cool (refine)</option>
+        </select>
+      </div>
+      <div class="col" style="display:flex;align-items:flex-end;gap:8px">
+        <button class="primary" id="hill-start" onclick="startHill()">Start cracking</button>
+        <button class="danger" id="hill-stop" onclick="stopHill()" style="display:none">Stop</button>
+      </div>
+    </div>
+    <div class="progress" id="hill-progress" style="display:none">
+      <div class="progress-fill" id="hill-progress-fill"></div>
+      <div class="progress-text" id="hill-progress-text">0%</div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-label">Best score</div><div class="stat-val" id="hill-score">—</div></div>
+    <div class="stat"><div class="stat-label">Iterations</div><div class="stat-val" id="hill-iter-count">0</div></div>
+    <div class="stat"><div class="stat-label">Improvements</div><div class="stat-val" id="hill-improvements">0</div></div>
+    <div class="stat"><div class="stat-label">Time</div><div class="stat-val" id="hill-time">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Best mapping found</div>
+    <div class="mapping-grid" id="hill-map-grid"></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="card-title" style="margin-bottom:6px">Best decoded output</div>
+      <div class="output-box" id="hill-output" style="color:var(--coral-text)"></div>
+    </div>
+    <div class="col">
+      <div class="card-title" style="margin-bottom:6px">Search log</div>
+      <div class="log" id="hill-log">Ready. Choose a language and click "Start cracking".</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== COMPARE ======================== -->
+<div class="panel" id="p-compare">
+  <div class="card">
+    <div class="card-title">Compare decodings side by side</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Run all three methods and compare their outputs here. Look for recurring words or patterns that appear across methods — those are your strongest candidates.</p>
+    <button class="primary" onclick="runCompare()">Run all methods and compare</button>
+  </div>
+  <div id="compare-results"></div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// VOYNICH EVA TEXT SAMPLES (real transcription data)
+// ============================================================
+const SAMPLES = {
+  herbal: "fachys.ykal.ar.ataiin.shol.shory.cthres.y.kor.sholdy.sory.cthres.y.kor.sholdy.shorys.cthy.kor.sholdy.sory.cthres.daiin.okaiin.or.okan.dal.daiin.cthor.dam.cthol.daraishy.cthol.daiin.otar.okaiin.or.okan.sholdy.cthy.daiin.okaiin.olar.aiin.otar.otaiin.dalor.lkain.cthor.daiin.sho.kain.ol.or.aiin.otaiin.ol.aiin.otar.okaiin.otaiin.olol.cthy.otar",
+  bio: "oteody.chey.oteey.okeey.qokeey.dal.qokeey.lkeedy.qokeey.chedy.qokain.chedy.qokain.chey.dal.chedy.otedy.qokeedy.shedy.qokeey.otey.chey.qokeedy.lchedy.dal.qokeey.chedy.otey.shedy.qokeey.dal.qokeedy.lchedy.qokeey.cheol.cheody.dal.otey.qokeey",
+  pharma: "taiin.chedy.dal.shey.kody.chody.lchedy.qokedy.dal.chedy.otey.qokey.chedy.qokedy.shedy.lchedy.dal.shedy.qokedy.chey.otey.shedy.qokeedy.chedy.qokedy.lchedy.dal.chedy.otey.shedy.dal.qokedy.cheey.qokeedy",
+  astro: "otaiin.opaiin.qokaiin.okaiin.dal.otaiin.opcheey.daiin.cheey.cthaiin.dar.otaiin.cheol.daiin.opchor.daiin.okeol.daiin.cheor.dal.otaiin.daiin.chey.otaiin.opaiin.qokaiin.otaiin.cheey.daiin",
+  recipe: "sar.shey.dar.shey.oteody.otey.yshedy.qokeedy.lchedy.dain.cheedy.dal.shey.kody.otey.chedy.chey.dal.shedy.qokedy.chedy.lchedy.qokedy.chey.dal.shedy.otey.chedy.dain.shedy.qokeedy"
+};
+
+// EVA characters in frequency order
+const EVA_CHARS = ['o','a','e','d','y','l','s','h','r','k','t','n','i','q','p','f','c','g','m','x','v'];
+
+// Target language letter frequencies
+const LANG_FREQ = {
+  latin:   ['e','i','a','u','t','s','n','r','o','c','l','m','p','d','b','q','g','v','f','x','h'],
+  italian: ['e','a','i','o','n','l','r','t','s','c','d','p','u','m','v','g','h','b','f','z','q'],
+  hebrew:  ['י','ו','ה','ל','א','מ','ר','ב','ש','נ','ת','כ','ע','ד','ח','צ','ק','פ','ג','ז','ס']
+};
+
+// Bigram frequencies (log probabilities) for scoring
+const BIGRAMS = {
+  latin: {"er":8.2,"in":7.8,"es":7.5,"ti":7.2,"us":7.0,"um":6.8,"en":6.7,"an":6.5,"is":6.4,"re":6.3,"at":6.2,"et":6.1,"te":6.0,"it":5.9,"ar":5.8,"or":5.7,"nt":5.6,"ra":5.5,"ta":5.4,"al":5.3,"ur":5.2,"am":5.1,"em":5.0,"tu":4.9,"ae":4.8,"de":4.7,"ia":4.6,"io":4.5,"on":4.4,"ne":4.3,"ri":4.2,"se":4.1,"ut":4.0,"qu":3.9,"st":3.8,"co":3.7,"ec":3.6,"mi":3.5,"li":3.4,"cu":3.3,"ve":3.2,"no":3.1,"pe":3.0,"di":2.9,"pr":2.8,"si":2.7,"ab":2.6,"su":2.5,"na":2.4,"po":2.3,"ni":2.2,"au":2.1,"ma":2.0,"vi":1.9,"tr":1.8,"ac":1.7,"ex":1.6,"ce":1.5,"sa":1.4,"ib":1.3,"ca":1.2,"ci":1.1,"le":1.0},
+  italian:{"er":8.5,"in":8.2,"an":7.8,"on":7.6,"re":7.4,"en":7.2,"la":7.0,"el":6.8,"di":6.7,"to":6.5,"co":6.3,"al":6.2,"de":6.0,"ta":5.9,"ti":5.8,"le":5.7,"te":5.6,"ne":5.5,"no":5.4,"ra":5.3,"ri":5.2,"se":5.1,"io":5.0,"ar":4.9,"li":4.8,"pe":4.7,"il":4.6,"si":4.5,"or":4.4,"st":4.3,"ni":4.2,"na":4.1,"me":4.0,"so":3.9,"es":3.8,"at":3.7,"ro":3.6,"lo":3.5,"da":3.4,"ve":3.3,"ma":3.2,"pa":3.1,"un":3.0,"ca":2.9,"ia":2.8,"ol":2.7,"po":2.6,"mi":2.5,"ci":2.4,"ch":2.3,"pr":2.2,"tr":2.1,"tu":2.0,"vi":1.9,"it":1.8,"ce":1.7,"sa":1.6,"sc":1.5,"fi":1.4,"vo":1.3,"do":1.2,"pi":1.1,"mo":1.0},
+  hebrew:{"יו":8.0,"ור":7.5,"הי":7.2,"ול":7.0,"אל":6.8,"ים":6.6,"של":6.4,"ון":6.2,"מה":6.0,"את":5.8,"לא":5.6,"בי":5.4,"רה":5.2,"הם":5.0,"ני":4.8,"תי":4.6,"כי":4.4,"לה":4.2,"עם":4.0,"אר":3.8,"שר":3.6,"דם":3.4,"חי":3.2,"מי":3.0,"רא":2.8,"בר":2.6,"נה":2.4,"יה":2.2,"לו":2.0,"ין":1.8,"אי":1.6,"שם":1.4,"הו":1.2,"עי":1.0}
+};
+
+// Common syllables for syllabary mode
+const EVA_SYLLABLES = ['ch','sh','ain','aiin','ain','dy','ey','ol','or','ar','al','ok','ot','qo','da','ok','ed','ee','od','ck','ct','ph','cf'];
+const SYLL_MAP_DEFAULT = {
+  latin: {ch:'ca',sh:'sa',aiin:'ens',ain:'an',dy:'dus',ey:'eus',ol:'ol',or:'or',ar:'ar',al:'al',ok:'oc',ot:'ot',qo:'qu',da:'da',ed:'ed',ee:'ae',od:'od',ct:'ct',ph:'ph',cf:'cf'},
+  italian:{ch:'ci',sh:'si',aiin:'ine',ain:'an',dy:'de',ey:'ei',ol:'ol',or:'or',ar:'ar',al:'al',ok:'oc',ot:'ot',qo:'co',da:'da',ed:'ed',ee:'ea',od:'od',ct:'ct',ph:'fi',cf:'ci'},
+  hebrew: {ch:'כ',sh:'ש',aiin:'אין',ain:'אן',dy:'ד',ey:'אי',ol:'אל',or:'אר',ar:'ער',al:'על',ok:'אק',ot:'את',qo:'ק',da:'ד',ed:'עד',ee:'עא',od:'עד',ct:'כת',ph:'פ',cf:'כפ'}
+};
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+const TAB_NAMES = [
+  {id:'freq', label:'Frequency substitution'},
+  {id:'syl', label:'Syllabary decoder'},
+  {id:'hill', label:'Hill climbing'},
+  {id:'compare', label:'Compare all'}
+];
+const tabsEl = document.getElementById('tabs');
+let activeTab = 'freq';
+function setTab(id){
+  activeTab=id;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+id));
+}
+TAB_NAMES.forEach(t=>{
+  const btn=document.createElement('button');
+  btn.className='tab'+(t.id===activeTab?' on':'');
+  btn.textContent=t.label;btn.dataset.t=t.id;
+  btn.onclick=()=>setTab(t.id);
+  tabsEl.appendChild(btn);
+});
+
+// ============================================================
+// 1. FREQUENCY SUBSTITUTION
+// ============================================================
+let freqMap = {};
+
+function initFreqMap(){
+  const lang = document.getElementById('freq-lang').value;
+  const targets = LANG_FREQ[lang];
+  freqMap = {};
+  EVA_CHARS.forEach((c,i) => { freqMap[c] = targets[i] || '?'; });
+  // Handle digraphs
+  freqMap['ch'] = lang==='latin'?'qu':lang==='italian'?'ch':'כ';
+  freqMap['sh'] = lang==='latin'?'st':lang==='italian'?'sc':'ש';
+  renderFreqGrid();
+  decodeFreq();
+}
+
+function renderFreqGrid(){
+  const grid = document.getElementById('freq-map-grid');
+  grid.innerHTML='';
+  // Show digraphs first, then singles
+  const order = ['ch','sh',...EVA_CHARS];
+  const seen = new Set();
+  order.forEach(eva=>{
+    if(seen.has(eva))return; seen.add(eva);
+    const cell=document.createElement('div');
+    cell.className='map-cell';
+    cell.innerHTML=`<span class="eva">${eva}</span><span class="arrow">→</span><input value="${freqMap[eva]||'?'}" onchange="freqMap['${eva}']=this.value;decodeFreq()">`;
+    grid.appendChild(cell);
+  });
+}
+
+function applyMapping(text, mapping){
+  // Sort keys longest first so digraphs match before singles
+  const keys = Object.keys(mapping).sort((a,b)=>b.length-a.length);
+  let result = '';
+  let i = 0;
+  const chars = text.replace(/[.\-=,]/g,' ').split('');
+  while(i < text.length){
+    if(text[i]==='.'||text[i]===','||text[i]==='-'||text[i]==='='){
+      result += text[i]===' '?' ':' ';
+      i++; continue;
+    }
+    if(text[i]===' '){result+=' ';i++;continue;}
+    let matched = false;
+    for(const key of keys){
+      if(text.substring(i, i+key.length)===key){
+        result += mapping[key] || '?';
+        i += key.length;
+        matched = true;
+        break;
+      }
+    }
+    if(!matched){ result += text[i]; i++; }
+  }
+  return result;
+}
+
+function decodeFreq(){
+  const sample = document.getElementById('freq-sample').value;
+  const src = SAMPLES[sample];
+  document.getElementById('freq-source').textContent = src;
+  document.getElementById('freq-output').textContent = applyMapping(src, freqMap);
+}
+
+// ============================================================
+// 2. SYLLABARY DECODER
+// ============================================================
+let sylMap = {};
+
+function initSylMap(){
+  const lang = document.getElementById('syl-lang').value;
+  sylMap = {...SYLL_MAP_DEFAULT[lang]};
+  renderSylGrid();
+  decodeSyl();
+}
+
+function renderSylGrid(){
+  const grid = document.getElementById('syl-map-grid');
+  grid.innerHTML='';
+  Object.entries(sylMap).forEach(([eva,target])=>{
+    const cell=document.createElement('div');
+    cell.className='map-cell';
+    cell.innerHTML=`<span class="eva">${eva}</span><span class="arrow">→</span><input value="${target}" style="width:48px" onchange="sylMap['${eva}']=this.value;decodeSyl()">`;
+    grid.appendChild(cell);
+  });
+}
+
+function decodeSyl(){
+  const src = SAMPLES.herbal;
+  document.getElementById('syl-source').textContent = src;
+  document.getElementById('syl-output').textContent = applyMapping(src, sylMap);
+}
+
+// ============================================================
+// 3. HILL CLIMBING
+// ============================================================
+let hillRunning = false;
+let hillAnimFrame = null;
+
+function scoreBigrams(text, lang){
+  const bi = BIGRAMS[lang];
+  let score = 0;
+  const clean = text.replace(/[^a-zA-Z\u0590-\u05FF]/g,'').toLowerCase();
+  for(let i=0;i<clean.length-1;i++){
+    const pair = clean.substring(i,i+2);
+    if(bi[pair]) score += bi[pair];
+  }
+  return score;
+}
+
+function stopHill(){
+  hillRunning = false;
+  document.getElementById('hill-start').style.display='';
+  document.getElementById('hill-stop').style.display='none';
+  document.getElementById('hill-progress').style.display='none';
+}
+
+function startHill(){
+  const lang = document.getElementById('hill-lang').value;
+  const maxIter = parseInt(document.getElementById('hill-iters').value);
+  const tempBase = parseFloat(document.getElementById('hill-temp').value);
+  const src = SAMPLES.herbal + ' ' + SAMPLES.bio + ' ' + SAMPLES.pharma;
+  const targets = LANG_FREQ[lang];
+  
+  // Initialize with frequency mapping
+  let mapping = {};
+  EVA_CHARS.forEach((c,i) => { mapping[c] = targets[i] || '?'; });
+  mapping['ch'] = lang==='latin'?'qu':lang==='italian'?'ch':'כ';
+  mapping['sh'] = lang==='latin'?'st':lang==='italian'?'sc':'ש';
+
+  let bestMapping = {...mapping};
+  let decoded = applyMapping(src, mapping);
+  let bestScore = scoreBigrams(decoded, lang);
+  let improvements = 0;
+  let iter = 0;
+  const startTime = Date.now();
+  const logEl = document.getElementById('hill-log');
+  logEl.textContent = `Starting hill climb: ${lang}, ${maxIter.toLocaleString()} iterations, temp=${tempBase}\n`;
+
+  hillRunning = true;
+  document.getElementById('hill-start').style.display='none';
+  document.getElementById('hill-stop').style.display='';
+  document.getElementById('hill-progress').style.display='';
+
+  function chunk(){
+    if(!hillRunning || iter >= maxIter){ 
+      stopHill();
+      logEl.textContent += `\nDone! Final score: ${bestScore.toFixed(1)} after ${iter.toLocaleString()} iterations, ${improvements} improvements.\n`;
+      return;
+    }
+    const chunkSize = Math.min(2000, maxIter - iter);
+    for(let c=0;c<chunkSize;c++){
+      iter++;
+      // Pick two random EVA chars and swap their mappings
+      const keys = Object.keys(mapping);
+      const i1 = Math.floor(Math.random()*keys.length);
+      let i2 = Math.floor(Math.random()*keys.length);
+      while(i2===i1) i2 = Math.floor(Math.random()*keys.length);
+      
+      const tmp = mapping[keys[i1]];
+      mapping[keys[i1]] = mapping[keys[i2]];
+      mapping[keys[i2]] = tmp;
+
+      decoded = applyMapping(src, mapping);
+      const score = scoreBigrams(decoded, lang);
+      
+      // Simulated annealing: accept if better, or with probability based on temperature
+      const temp = tempBase * (1 - iter/maxIter);
+      const delta = score - bestScore;
+      
+      if(delta > 0 || Math.random() < Math.exp(delta / (temp + 0.01))){
+        if(score > bestScore){
+          bestScore = score;
+          bestMapping = {...mapping};
+          improvements++;
+          if(improvements % 20 === 0){
+            logEl.textContent += `[${iter.toLocaleString()}] Score: ${bestScore.toFixed(1)} (+${delta.toFixed(1)})\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+          }
+        }
+      } else {
+        // Revert swap
+        mapping[keys[i2]] = mapping[keys[i1]];
+        mapping[keys[i1]] = tmp;
+      }
+    }
+
+    // Update UI
+    const pct = Math.round(iter/maxIter*100);
+    document.getElementById('hill-progress-fill').style.width = pct+'%';
+    document.getElementById('hill-progress-text').textContent = pct+'%';
+    document.getElementById('hill-score').textContent = bestScore.toFixed(1);
+    document.getElementById('hill-iter-count').textContent = iter.toLocaleString();
+    document.getElementById('hill-improvements').textContent = improvements;
+    const elapsed = ((Date.now()-startTime)/1000).toFixed(1);
+    document.getElementById('hill-time').textContent = elapsed+'s';
+    document.getElementById('hill-output').textContent = applyMapping(src, bestMapping);
+    
+    // Render best mapping
+    const grid = document.getElementById('hill-map-grid');
+    grid.innerHTML='';
+    Object.entries(bestMapping).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([eva,target])=>{
+      const cell=document.createElement('div');
+      cell.className='map-cell';
+      cell.innerHTML=`<span class="eva">${eva}</span><span class="arrow">→</span><span class="mono">${target}</span>`;
+      grid.appendChild(cell);
+    });
+
+    hillAnimFrame = requestAnimationFrame(chunk);
+  }
+  chunk();
+}
+
+// ============================================================
+// 4. COMPARE
+// ============================================================
+function runCompare(){
+  const results = document.getElementById('compare-results');
+  results.innerHTML='';
+  const src = SAMPLES.herbal;
+  const langs = ['latin','italian','hebrew'];
+  
+  langs.forEach(lang=>{
+    // Frequency method
+    const fMap = {};
+    const targets = LANG_FREQ[lang];
+    EVA_CHARS.forEach((c,i)=>{fMap[c]=targets[i]||'?';});
+    fMap['ch']=lang==='latin'?'qu':lang==='italian'?'ch':'כ';
+    fMap['sh']=lang==='latin'?'st':lang==='italian'?'sc':'ש';
+    const fDec = applyMapping(src, fMap);
+    const fScore = scoreBigrams(fDec, lang);
+    
+    // Syllabary method
+    const sMap = {...SYLL_MAP_DEFAULT[lang]};
+    const sDec = applyMapping(src, sMap);
+    const sScore = scoreBigrams(sDec, lang);
+
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="card-title" style="margin-bottom:10px">
+        ${lang.charAt(0).toUpperCase()+lang.slice(1)}
+        <span class="badge" style="background:var(--purple-bg);color:var(--purple-text);margin-left:8px">Freq: ${fScore.toFixed(1)}</span>
+        <span class="badge" style="background:var(--teal-bg);color:var(--teal-text);margin-left:4px">Syll: ${sScore.toFixed(1)}</span>
+      </div>
+      <div style="font-size:12px;margin-bottom:6px;color:var(--text2)">Frequency substitution:</div>
+      <div class="output-box" style="min-height:60px;max-height:100px;font-size:11px;margin-bottom:10px;color:var(--purple)">${fDec}</div>
+      <div style="font-size:12px;margin-bottom:6px;color:var(--text2)">Syllabary decoder:</div>
+      <div class="output-box" style="min-height:60px;max-height:100px;font-size:11px;color:var(--teal-text)">${sDec}</div>
+    `;
+    results.appendChild(card);
+  });
+
+  const tip = document.createElement('div');
+  tip.className='card';
+  tip.style.background='var(--purple-bg)';
+  tip.style.color='var(--purple-text)';
+  tip.innerHTML=`<div class="card-title">Next steps</div><p style="font-size:13px;line-height:1.6">Higher bigram scores suggest the output looks more like real text in that language. Try running the hill climber on each language for 500k+ iterations to find stronger mappings. Look for recurring decoded words that could be plant names, body parts, or astronomical terms — those would confirm you're on the right track.</p>`;
+  results.appendChild(tip);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+initFreqMap();
+initSylMap();
+</script>
+</body>
+</html>

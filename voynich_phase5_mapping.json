@@ -1,0 +1,135 @@
+{
+  "method": "LJS419-inspired vowel-consonant substitution",
+  "best_vowel_map": {
+    "o": "a",
+    "a": "o",
+    "e": "i",
+    "y": "e",
+    "i": "u"
+  },
+  "consonant_map": {
+    "sh": "m",
+    "ch": "v",
+    "k": "r",
+    "l": "l",
+    "t": "s",
+    "s": "c",
+    "r": "sc",
+    "n": "n",
+    "p": "f",
+    "f": "b",
+    "h": "t",
+    "c": "g",
+    "g": "z",
+    "m": "q"
+  },
+  "full_mapping": {
+    "sh": "m",
+    "ch": "v",
+    "k": "r",
+    "l": "l",
+    "t": "s",
+    "s": "c",
+    "r": "sc",
+    "n": "n",
+    "p": "f",
+    "f": "b",
+    "h": "t",
+    "c": "g",
+    "g": "z",
+    "m": "q",
+    "o": "a",
+    "a": "o",
+    "e": "i",
+    "y": "e",
+    "i": "u"
+  },
+  "italian_matches": [
+    "are",
+    "e",
+    "me",
+    "vie"
+  ],
+  "match_count": 4,
+  "top5_permutations": [
+    [
+      4,
+      {
+        "o": "o",
+        "a": "u",
+        "e": "i",
+        "y": "e",
+        "i": "a"
+      },
+      [
+        "e",
+        "me",
+        "ore",
+        "vie"
+      ]
+    ],
+    [
+      4,
+      {
+        "o": "o",
+        "a": "a",
+        "e": "i",
+        "y": "e",
+        "i": "u"
+      },
+      [
+        "e",
+        "me",
+        "ore",
+        "vie"
+      ]
+    ],
+    [
+      4,
+      {
+        "o": "a",
+        "a": "u",
+        "e": "i",
+        "y": "e",
+        "i": "o"
+      },
+      [
+        "are",
+        "e",
+        "me",
+        "vie"
+      ]
+    ],
+    [
+      4,
+      {
+        "o": "a",
+        "a": "o",
+        "e": "i",
+        "y": "e",
+        "i": "u"
+      },
+      [
+        "are",
+        "e",
+        "me",
+        "vie"
+      ]
+    ],
+    [
+      3,
+      {
+        "o": "u",
+        "a": "o",
+        "e": "i",
+        "y": "e",
+        "i": "a"
+      },
+      [
+        "e",
+        "me",
+        "vie"
+      ]
+    ]
+  ]
+}

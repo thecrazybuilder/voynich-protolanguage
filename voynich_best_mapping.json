@@ -1,0 +1,195 @@
+{
+  "mapping": {
+    "o": "e",
+    "a": "a",
+    "e": "i",
+    "d": "n",
+    "y": "o",
+    "ch": "d",
+    "sh": "m",
+    "l": "l",
+    "s": "?",
+    "h": "f",
+    "r": "sc",
+    "k": "r",
+    "t": "s",
+    "n": "v",
+    "i": "t",
+    "q": "p",
+    "p": "c",
+    "f": "h",
+    "c": "q",
+    "g": "u",
+    "m": "b",
+    "x": "g",
+    "v": "z"
+  },
+  "score": 6513,
+  "locked": {
+    "o": "e",
+    "a": "a",
+    "y": "o",
+    "d": "n",
+    "q": "p",
+    "r": "sc",
+    "l": "l",
+    "e": "i"
+  },
+  "matches": [
+    [
+      "mino",
+      "~ino",
+      64
+    ],
+    [
+      "dino",
+      "~ino",
+      57
+    ],
+    [
+      "periio",
+      "~per",
+      35
+    ],
+    [
+      "peratv",
+      "~era",
+      20
+    ],
+    [
+      "periino",
+      "~ino",
+      16
+    ],
+    [
+      "perino",
+      "~ino",
+      16
+    ],
+    [
+      "ldino",
+      "~ino",
+      15
+    ],
+    [
+      "esdel",
+      "~del",
+      14
+    ],
+    [
+      "esino",
+      "~ino",
+      10
+    ],
+    [
+      "perattv",
+      "~era",
+      9
+    ],
+    [
+      "erattv",
+      "~era",
+      8
+    ],
+    [
+      "eriino",
+      "~ino",
+      7
+    ],
+    [
+      "mel",
+      "exact",
+      6
+    ],
+    [
+      "del",
+      "exact",
+      4
+    ],
+    [
+      "eratv",
+      "~era",
+      3
+    ],
+    [
+      "o",
+      "exact",
+      2
+    ],
+    [
+      "melno",
+      "~mel",
+      2
+    ],
+    [
+      "esieno",
+      "~eno",
+      2
+    ],
+    [
+      "reno",
+      "~eno",
+      2
+    ],
+    [
+      "conatttv",
+      "~con",
+      1
+    ],
+    [
+      "ecdino",
+      "~ino",
+      1
+    ],
+    [
+      "esiino",
+      "~ino",
+      1
+    ],
+    [
+      "esaldo",
+      "~sal",
+      1
+    ],
+    [
+      "erino",
+      "~ino",
+      1
+    ],
+    [
+      "lriino",
+      "~ino",
+      1
+    ],
+    [
+      "dieno",
+      "~eno",
+      1
+    ],
+    [
+      "cdino",
+      "~ino",
+      1
+    ],
+    [
+      "deno",
+      "~eno",
+      1
+    ],
+    [
+      "perio",
+      "~per",
+      1
+    ],
+    [
+      "omino",
+      "~ino",
+      1
+    ],
+    [
+      "diino",
+      "~ino",
+      1
+    ]
+  ]
+}

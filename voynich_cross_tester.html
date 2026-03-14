@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voynich Cross-Section Tester</title>
+<style>
+:root{--bg:#fafaf8;--bg2:#f1efe8;--bg3:#e8e6df;--text:#1a1a18;--text2:#5f5e5a;--text3:#888780;--border:rgba(0,0,0,.12);--border2:rgba(0,0,0,.06);--purple:#534AB7;--purple-bg:#EEEDFE;--purple-t:#3C3489;--teal:#1D9E75;--teal-bg:#E1F5EE;--teal-t:#0F6E56;--coral:#D85A30;--coral-bg:#FAECE7;--coral-t:#712B13;--blue:#378ADD;--blue-bg:#E6F1FB;--blue-t:#0C447C;--amber:#BA7517;--amber-bg:#FAEEDA;--amber-t:#854F0B;--pink-bg:#FBEAF0;--pink-t:#993556;--green:#639922;--green-bg:#EAF3DE;--green-t:#3B6D11;--red:#E24B4A;--mono:'SF Mono','Fira Code','Menlo',monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--bg2:#2c2c2a;--bg3:#3d3d3a;--text:#e8e6df;--text2:#b4b2a9;--text3:#888780;--border:rgba(255,255,255,.12);--border2:rgba(255,255,255,.06);--purple-bg:#26215C;--purple-t:#CECBF6;--teal-bg:#04342C;--teal-t:#9FE1CB;--coral-bg:#4A1B0C;--coral-t:#F5C4B3;--blue-bg:#042C53;--blue-t:#B5D4F4;--amber-bg:#412402;--amber-t:#FAC775;--pink-bg:#4B1528;--pink-t:#F4C0D1;--green-bg:#173404;--green-t:#C0DD97}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.wrap{max-width:920px;margin:0 auto;padding:1.5rem}
+h1{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.sub{font-size:13px;color:var(--text2);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border2)}
+.card{background:var(--bg2);border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.card-t{font-size:14px;font-weight:500;margin-bottom:8px}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:3px}
+textarea{width:100%;font-family:var(--mono);font-size:12px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);resize:vertical;line-height:1.6}
+select{font-family:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)}
+button{font-family:inherit;font-size:13px;padding:8px 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer;font-weight:500;transition:all .15s}
+button:hover{background:var(--bg2)}
+button.pri{background:var(--purple);color:#fff;border-color:var(--purple)}
+button.pri:hover{opacity:.9}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:5px;margin:12px 0}
+.mc{display:flex;align-items:center;gap:4px;font-size:12px;padding:4px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px}
+.mc .ev{font-family:var(--mono);font-weight:600;min-width:24px}
+.mc input{width:32px;padding:2px 4px;font-size:12px;font-family:var(--mono);text-align:center;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)}
+.out{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--mono);font-size:11.5px;line-height:1.8;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.section-card{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:var(--bg)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.section-name{font-weight:500;font-size:14px}
+.badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;display:inline-block}
+.word-cloud{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.wc-word{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;background:var(--bg2)}
+.shared-word{background:var(--purple-bg);color:var(--purple-t)}
+.unique-word{background:var(--coral-bg);color:var(--coral-t)}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:var(--bg2);border-radius:8px;padding:8px 12px;flex:1;min-width:90px}
+.stat-l{font-size:11px;color:var(--text3)}
+.stat-v{font-size:18px;font-weight:600}
+.bar-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:4px 0}
+.bar-fill{height:100%;border-radius:3px}
+.verdict{border-radius:10px;padding:16px 20px;margin-top:16px}
+.verdict-good{background:var(--green-bg);color:var(--green-t)}
+.verdict-meh{background:var(--amber-bg);color:var(--amber-t)}
+.verdict-bad{background:var(--pink-bg);color:var(--pink-t)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+.overlap-matrix{display:grid;gap:2px;font-size:10px;margin:12px 0}
+.om-cell{padding:4px;text-align:center;border-radius:3px;font-family:var(--mono)}
+.om-head{font-weight:500;font-size:10px;color:var(--text2);padding:4px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Voynich cross-section tester</h1>
+<div class="sub">Paste your best mapping from the decoder toolkit. This tool runs it against every section of the manuscript and checks if different sections produce different vocabulary — the strongest signal that a mapping is working.</div>
+
+<div class="card">
+  <div class="card-t">Your character mapping</div>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Edit the mapping below, or use a preset to start from a known frequency match. Each EVA character maps to a decoded letter/syllable.</p>
+  <div class="row" style="margin-bottom:10px">
+    <div>
+      <label>Start from preset</label>
+      <select id="preset" onchange="loadPreset()">
+        <option value="custom">Custom (edit below)</option>
+        <option value="latin">Latin frequency match</option>
+        <option value="italian">Italian frequency match</option>
+        <option value="hebrew">Hebrew frequency match</option>
+      </select>
+    </div>
+    <button class="pri" onclick="runAnalysis()">Run cross-section test</button>
+  </div>
+  <div class="mg" id="map-grid"></div>
+</div>
+
+<div id="results"></div>
+
+</div>
+<script>
+// ============================================================
+// EVA TRANSCRIPTION DATA — expanded sections
+// ============================================================
+const SECTIONS = {
+  "Herbal A (f1r-f11v)": {
+    type: "herbal", lang: "A", color: "#639922",
+    text: "fachys.ykal.ar.ataiin.shol.shory.cthres.y.kor.sholdy.sory.cthres.y.kor.sholdy.shorty.cthory.cthory.dan.syaiir.sheky.or.ykaiin.shod.cthoary.cthory.dan.shory.cthar.cthar.dan.syaiir.shol.shory.cphory.daiin.okaiin.oky.daiin.otchor.chol.daiin.ckhey.ytaiin.shey.pydaiiin.cpheol.daiin.cthy.okain.shol.shory.cthor.cphol.dan.shy.cphy.shol.daiin.cthy.daiiin.otor.shy.shor.shol.daiin.shy.cpho.daiin.koshey.okeol.okeol.dal.daiin.cthey.okaiin.shey.otain.opchedy.shedy.qokeey.okeedy.qokain.otaiin.okeol.shedy.qokain.shedy.qokaiin.oteedy.okain.shedy.qokeedy.qokain.shedy.qokaiin.shedy.qokain.otaiin.okeedy.okeol.shol.shory.okaiin.chol.daiin.shedy.qokeedy.chedy.dal.daiin.chedy.okeol.shedy.qokeedy.chedy.dal.daiin.chedy.okeey.okeol.shedy.qokain.shedy.qokaiin"
+  },
+  "Herbal B (f25r-f30v)": {
+    type: "herbal", lang: "B", color: "#1D9E75",
+    text: "kchor.sheody.otchol.daiin.otaiin.or.okaiin.chedy.shor.chor.otaiin.cphar.cthes.shy.choraiin.otedy.shedy.otchol.cphodal.chody.otchol.daiin.otaiin.or.okaiin.shedy.qokain.chedy.daiin.cthedy.okeedy.daiin.qokeedy.chedy.qokaiin.okeedy.daiin.shedy.otchol.chor.shedy.chor.daiin.ychey.qokeey.chedy.shedy.okaiin.otedy.chedy.daiin.chor.shol.otaiin.okeol.chor.daiin.chedy.okeedy.qokaiin.otchol.chedy.daiin.shedy.qokeey.chedy.qokaiin.okeedy.qokain.shedy.otchol.daiin.otaiin.chor.daiin.shedy.qokain.chedy.otedy.qokeey.chedy.daiin"
+  },
+  "Astronomical (f67r-f69v)": {
+    type: "astro", lang: "A/B", color: "#378ADD",
+    text: "otalchy.opaiin.otchol.daiin.chcthy.otaiin.okeol.shedy.qokeey.daiin.okeol.shedy.chol.chol.daiin.otchol.otaiin.chedy.daiin.okain.okeol.chedy.qokeey.otaiin.chor.daiin.otedy.okeol.chedy.shedy.qokeey.chedy.daiin.otchol.otaiin.okeol.chedy.qokeey.daiin.okedy.otchol.shedy.qokain.daiin.otchol.okeol.chedy.daiin.shedy.qokeey.chedy.otchol.daiin.otaiin.okeol.shedy.qokeey.opaiin.chedy.daiin.okeol.shedy.otaiin.qokain.daiin.otchol.chedy.okeol.shedy.qokeey.daiin.shedy.qokain.chedy.otedy"
+  },
+  "Biological (f75r-f84v)": {
+    type: "bio", lang: "B", color: "#993556",
+    text: "oteody.chey.oteey.okeey.qokeey.dal.qokeey.lkeedy.qokeey.chedy.qokain.chedy.qokain.chey.dal.chedy.otedy.qokeedy.shedy.qokeey.otey.chey.qokeedy.lchedy.dal.qokeey.chedy.otey.shedy.qokeey.dal.qokeedy.lchedy.qokeey.cheol.cheody.dal.otey.qokeey.okeey.chedy.dal.qokeey.otey.shedy.qokeey.dal.chedy.otedy.qokeedy.dal.qokeey.chedy.qokain.shedy.qokeey.otey.lchedy.dal.chedy.otey.qokeedy.shedy.qokeey.cheol.dal.chedy.otedy.qokeedy.lchedy.dal.qokeey.otey.chedy.qokeey"
+  },
+  "Pharmaceutical (f99r-f102v)": {
+    type: "pharma", lang: "B", color: "#D85A30",
+    text: "pchedy.qokeey.daiin.chey.okaiin.shedy.qokain.chedy.shedy.otchol.daiin.okeol.chedy.qokeey.daiin.shedy.qokain.otaiin.chor.shedy.okeol.chedy.qokeey.daiin.chedy.otedy.okeol.shedy.qokaiin.daiin.okeol.chedy.otchol.daiin.shedy.qokeey.chedy.okaiin.otedy.shedy.qokain.chedy.qokaiin.okeedy.daiin.shedy.qokeey.otaiin.chor.daiin.shedy.qokain.chedy.okeedy.qokaiin.chedy.daiin.shedy.qokeey.chedy.qokain.otedy.daiin.okeol.shedy.qokaiin.daiin.chedy.otchol.shedy.qokeey"
+  },
+  "Stars (f103r-f108v)": {
+    type: "stars", lang: "A", color: "#BA7517",
+    text: "taiin.chedy.dal.shey.kody.chody.lchedy.qokedy.dal.chedy.otey.qokey.chedy.qokedy.shedy.lchedy.dal.shedy.qokedy.chey.otey.shedy.qokeedy.chedy.qokedy.lchedy.dal.chedy.otey.shedy.dal.qokedy.cheey.qokeedy.otey.chedy.qokedy.dal.shedy.otey.chedy.lchedy.qokedy.shedy.dal.chedy.otey.qokedy.lchedy.dal.shedy.qokedy.chey.otey.shedy.qokeedy.chedy.qokedy.dal.shedy.otey.lchedy"
+  },
+  "Recipes (f103r+)": {
+    type: "recipe", lang: "B", color: "#534AB7",
+    text: "sar.shey.dar.shey.oteody.otey.yshedy.qokeedy.lchedy.dain.cheedy.dal.shey.kody.otey.chedy.chey.dal.shedy.qokedy.chedy.lchedy.qokedy.chey.dal.shedy.otey.chedy.dain.shedy.qokeedy.shedy.dal.chedy.otey.qokedy.shedy.lchedy.dal.shedy.qokedy.chey.otey.shedy.qokeedy.lchedy.qokedy.chey.dal.shedy.otey.chedy.lchedy.dain.shedy.qokeedy.otey.chedy.qokedy.dal.shedy.otey"
+  },
+  "Last page (f116v)": {
+    type: "text", lang: "B", color: "#888780",
+    text: "poxlcher.ychiily.shedy.okchoy.otchol.daiin.qokeey.shedy.qokain.chedy.daiin.otchol.shedy.chedy.okaiin.oteey.otaiin.chor.daiin.chedy.okeol.shedy.qokeey.qokain.shedy.okaiin.otedy.daiin.okeedy.okaiin.chedy.qokeey.otaiin.daiin.shedy.qokain.otchol.chedy.okeedy.qokaiin.okeol.shedy.otedy.qokeey.chedy.daiin.otchol.okeol.shedy.qokeey.daiin.shedy.qokain.chedy.okeedy.qokaiin"
+  }
+};
+
+const EVA_CHARS = ['o','a','e','d','y','ch','sh','l','s','h','r','k','t','n','i','q','p','f','c','g','m','x','v'];
+const LATIN_F =  ['e','i','a','u','t','qu','st','s','n','r','o','c','l','m','p','d','b','q','g','v','f','x','h'];
+const ITALIAN_F= ['e','a','i','o','n','ch','sc','l','r','t','s','c','d','p','u','m','v','g','h','b','f','z','q'];
+const HEBREW_F = ['י','ו','ה','ל','א','כ','ש','מ','ר','ב','ש','נ','ת','כ','ע','ד','ח','צ','ק','פ','ג','ז','ס'];
+
+let MAP = {};
+
+function loadPreset(){
+  const p = document.getElementById('preset').value;
+  if(p==='latin') EVA_CHARS.forEach((c,i)=>MAP[c]=LATIN_F[i]||'?');
+  else if(p==='italian') EVA_CHARS.forEach((c,i)=>MAP[c]=ITALIAN_F[i]||'?');
+  else if(p==='hebrew') EVA_CHARS.forEach((c,i)=>MAP[c]=HEBREW_F[i]||'?');
+  renderMap();
+}
+
+function renderMap(){
+  const g=document.getElementById('map-grid');g.innerHTML='';
+  EVA_CHARS.forEach(ev=>{
+    const d=document.createElement('div');d.className='mc';
+    d.innerHTML=`<span class="ev">${ev}</span><span style="color:var(--text3)">→</span><input value="${MAP[ev]||'?'}" oninput="MAP['${ev}']=this.value">`;
+    g.appendChild(d);
+  });
+}
+
+function tokenize(w){
+  const t=[];let i=0;
+  while(i<w.length){
+    if(i+3<=w.length){const s=w.substring(i,i+3);if(['cth','cph','ckh','cfh'].includes(s)){t.push(s);i+=3;continue}}
+    if(i+2<=w.length){const s=w.substring(i,i+2);if(['ch','sh','ct','cp','ck','cf'].includes(s)){t.push(s);i+=2;continue}}
+    t.push(w[i]);i++;
+  }
+  return t;
+}
+
+function decWord(w){return tokenize(w).map(t=>MAP[t]||MAP[t[0]]||'?').join('')}
+
+function runAnalysis(){
+  // Read current mapping from inputs
+  document.querySelectorAll('#map-grid .mc').forEach(cell=>{
+    const ev=cell.querySelector('.ev').textContent;
+    const val=cell.querySelector('input').value;
+    MAP[ev]=val;
+  });
+
+  const results=document.getElementById('results');
+  results.innerHTML='';
+
+  // Decode each section
+  const sectionResults = {};
+  const allDecodedWords = {};
+
+  Object.entries(SECTIONS).forEach(([name, sec])=>{
+    const evaWords = sec.text.split('.');
+    const decoded = evaWords.map(w=>decWord(w));
+    const wordFreq = {};
+    decoded.forEach(w=>{wordFreq[w]=(wordFreq[w]||0)+1});
+    const sorted = Object.entries(wordFreq).sort((a,b)=>b[1]-a[1]);
+    sectionResults[name] = {decoded, wordFreq, sorted, evaWords, sec};
+    sorted.forEach(([w])=>{
+      if(!allDecodedWords[w]) allDecodedWords[w]=new Set();
+      allDecodedWords[w].add(name);
+    });
+  });
+
+  // Find shared vs unique words
+  const sharedWords = {};
+  const uniqueToSection = {};
+  Object.entries(allDecodedWords).forEach(([w, sections])=>{
+    if(sections.size > 1) sharedWords[w] = sections;
+    else uniqueToSection[w] = [...sections][0];
+  });
+
+  // Summary stats
+  const totalUnique = Object.keys(allDecodedWords).length;
+  const sharedCount = Object.keys(sharedWords).length;
+  const uniqueCount = Object.keys(uniqueToSection).length;
+  const sharedPct = (sharedCount/totalUnique*100);
+  const uniquePct = (uniqueCount/totalUnique*100);
+
+  let html = '';
+
+  // Verdict
+  let verdictClass, verdictText;
+  if(uniquePct > 40){
+    verdictClass='verdict-good';
+    verdictText=`Strong signal: ${uniquePct.toFixed(0)}% of decoded words appear in only one section. Different sections are producing different vocabulary — this is what you'd expect from a real decipherment. The mapping may be capturing actual content differences.`;
+  } else if(uniquePct > 25){
+    verdictClass='verdict-meh';
+    verdictText=`Moderate signal: ${uniquePct.toFixed(0)}% section-unique words. There's some vocabulary differentiation, but not as much as you'd hope. Try tweaking characters that appear most in section-specific EVA words.`;
+  } else {
+    verdictClass='verdict-bad';
+    verdictText=`Weak signal: Only ${uniquePct.toFixed(0)}% section-unique words. The mapping is producing mostly the same words everywhere. This suggests it's reflecting cipher structure rather than actual meaning. Try a different approach.`;
+  }
+
+  html += `<div class="stat-row">
+    <div class="stat"><div class="stat-l">Total unique decoded words</div><div class="stat-v">${totalUnique}</div></div>
+    <div class="stat"><div class="stat-l">Shared across sections</div><div class="stat-v">${sharedCount} <span style="font-size:12px;font-weight:400;color:var(--text2)">(${sharedPct.toFixed(0)}%)</span></div></div>
+    <div class="stat"><div class="stat-l">Unique to one section</div><div class="stat-v">${uniqueCount} <span style="font-size:12px;font-weight:400;color:var(--text2)">(${uniquePct.toFixed(0)}%)</span></div></div>
+  </div>`;
+
+  html += `<div class="verdict ${verdictClass}"><div style="font-weight:500;margin-bottom:4px">Verdict</div><p style="font-size:13px;line-height:1.6;margin:0">${verdictText}</p></div>`;
+
+  // Vocabulary overlap matrix
+  const secNames = Object.keys(sectionResults);
+  const shortNames = secNames.map(n=>n.split('(')[0].trim().substring(0,10));
+  const cols = secNames.length + 1;
+
+  html += `<div class="card" style="margin-top:16px"><div class="card-t">Vocabulary overlap matrix</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Shows percentage of words shared between each pair of sections. Lower overlap = more differentiated vocabulary = stronger signal.</p>
+    <div class="overlap-matrix" style="grid-template-columns:80px repeat(${secNames.length},1fr)">`;
+  html += `<div class="om-head"></div>`;
+  shortNames.forEach(n=>html+=`<div class="om-head">${n}</div>`);
+
+  secNames.forEach((n1,i)=>{
+    const w1 = new Set(Object.keys(sectionResults[n1].wordFreq));
+    html += `<div class="om-head" style="text-align:right">${shortNames[i]}</div>`;
+    secNames.forEach((n2,j)=>{
+      const w2 = new Set(Object.keys(sectionResults[n2].wordFreq));
+      const inter = [...w1].filter(w=>w2.has(w)).length;
+      const union = new Set([...w1,...w2]).size;
+      const pct = union>0 ? (inter/union*100) : 0;
+      const alpha = Math.min(1, pct/80);
+      const bg = i===j ? 'var(--bg3)' : `rgba(83,74,183,${alpha.toFixed(2)})`;
+      const color = (i===j || pct < 40) ? 'var(--text)' : '#fff';
+      html += `<div class="om-cell" style="background:${bg};color:${color}">${i===j?'—':pct.toFixed(0)+'%'}</div>`;
+    });
+  });
+  html += `</div></div>`;
+
+  // Per-section breakdown
+  html += `<div class="card-t" style="margin:20px 0 10px">Section-by-section decoded output</div>`;
+
+  Object.entries(sectionResults).forEach(([name, res])=>{
+    const sec = res.sec;
+    const topWords = res.sorted.slice(0,15);
+    const sectionUniqueWords = topWords.filter(([w])=> {
+      const sections = allDecodedWords[w];
+      return sections && sections.size === 1;
+    });
+    const sectionSharedWords = topWords.filter(([w])=> {
+      const sections = allDecodedWords[w];
+      return sections && sections.size > 1;
+    });
+
+    html += `<div class="section-card">
+      <div class="section-head">
+        <div class="section-name">${name}</div>
+        <div>
+          <span class="badge" style="background:${sec.color}22;color:${sec.color}">${sec.type}</span>
+          <span class="badge" style="background:var(--bg2);color:var(--text2)">Lang ${sec.lang}</span>
+        </div>
+      </div>
+      <div class="out" style="max-height:150px;margin-bottom:10px;color:${sec.color}">${res.decoded.join(' ')}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top words (${res.sorted.length} unique):</div>
+      <div class="word-cloud">`;
+
+    topWords.forEach(([w,c])=>{
+      const isUnique = allDecodedWords[w] && allDecodedWords[w].size === 1;
+      const cls = isUnique ? 'unique-word' : 'shared-word';
+      html += `<span class="wc-word ${cls}" title="${isUnique?'Unique to this section':'Shared across sections'}">${w} (${c})</span>`;
+    });
+
+    html += `</div>`;
+
+    if(sectionUniqueWords.length > 0){
+      html += `<div style="font-size:11px;color:var(--coral-t);margin-top:4px">Section-unique: ${sectionUniqueWords.map(([w])=>w).join(', ')}</div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  // What to try next
+  html += `<div class="card" style="background:var(--purple-bg);color:var(--purple-t)">
+    <div class="card-t">What to look for</div>
+    <div style="font-size:13px;line-height:1.7">
+      <p style="margin-bottom:8px"><strong>Good signs:</strong> The herbal sections produce plant-like words. The pharmaceutical section has different words than the biological section. The astronomical section has its own vocabulary.</p>
+      <p style="margin-bottom:8px"><strong>Bad signs:</strong> Every section produces the same top words. The overlap matrix is dark purple everywhere (high overlap). Section-unique words look random.</p>
+      <p style="margin-bottom:0"><strong>Next step:</strong> Look at the section-unique words (highlighted in coral). Do any of them look like real words in the target language? If the herbal section produces something like "herba" or "radix" in Latin, or "pianta" or "fiore" in Italian — you might be onto something real.</p>
+    </div>
+  </div>`;
+
+  results.innerHTML = html;
+}
+
+// Init with Latin preset
+EVA_CHARS.forEach((c,i)=>MAP[c]=LATIN_F[i]||'?');
+renderMap();
+</script>
+</body>
+</html>

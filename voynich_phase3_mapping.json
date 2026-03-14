@@ -1,0 +1,152 @@
+{
+  "mapping": {
+    "o": "e",
+    "a": "a",
+    "y": "o",
+    "d": "n",
+    "q": "p",
+    "r": "sc",
+    "l": "l",
+    "e": "i",
+    "ch": "b",
+    "sh": "w",
+    "s": "c",
+    "h": "j",
+    "k": "d",
+    "t": "m",
+    "n": "t",
+    "i": "f",
+    "p": "s",
+    "f": "h",
+    "c": "z",
+    "g": "v",
+    "m": "q",
+    "x": "g",
+    "v": "k",
+    "qokaiin": "perone",
+    "qokeey": "perere",
+    "qokeedy": "perente",
+    "qokedy": "pereno",
+    "qokain": "perano",
+    "daiin": "della",
+    "aiin": "ente",
+    "shedy": "mino",
+    "chedy": "vino",
+    "otchol": "estel",
+    "okeol": "erel",
+    "shey": "?",
+    "chor": "?",
+    "okedy": "?",
+    "shor": "?",
+    "cphar": "?",
+    "okaiin": "?",
+    "otey": "?",
+    "ain": "?",
+    "eedy": "?",
+    "daiiin": "?",
+    "cpho": "?",
+    "chody": "?",
+    "cthar": "?",
+    "aiir": "?",
+    "cheol": "?",
+    "okeedy": "?",
+    "shol": "?",
+    "otor": "?",
+    "otaiin": "?",
+    "cheey": "?",
+    "qokey": "?",
+    "chey": "?",
+    "cthory": "?",
+    "otedy": "?",
+    "cthy": "?",
+    "cphodal": "?"
+  },
+  "score": 4427.00000000002,
+  "matches": [
+    [
+      "mino",
+      "~ino",
+      72
+    ],
+    [
+      "vino",
+      "EXACT",
+      67
+    ],
+    [
+      "della",
+      "EXACT",
+      54
+    ],
+    [
+      "perere",
+      "~per",
+      38
+    ],
+    [
+      "perano",
+      "~era",
+      23
+    ],
+    [
+      "pereno",
+      "~eno",
+      16
+    ],
+    [
+      "lvino",
+      "~vino",
+      15
+    ],
+    [
+      "perone",
+      "~per",
+      12
+    ],
+    [
+      "o",
+      "EXACT",
+      2
+    ],
+    [
+      "deno",
+      "~eno",
+      2
+    ],
+    [
+      "mente",
+      "EXACT",
+      1
+    ],
+    [
+      "odal",
+      "~dal",
+      1
+    ],
+    [
+      "amente",
+      "~mente",
+      1
+    ],
+    [
+      "omente",
+      "~mente",
+      1
+    ],
+    [
+      "esvino",
+      "~vino",
+      1
+    ],
+    [
+      "svino",
+      "~vino",
+      1
+    ],
+    [
+      "omino",
+      "~ino",
+      1
+    ]
+  ]
+}

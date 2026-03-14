@@ -1,0 +1,31 @@
+{
+  "folio": "f9v",
+  "plant_identification": "Viola tricolor (heartsease/wild pansy) — Petersen, high confidence",
+  "total_unique_words": 66,
+  "analysis_date": "2026-03-14",
+  "words_unique_to_f9v": [
+    {"word": "fochor", "skeleton": "bvsc"},
+    {"word": "oporody", "skeleton": "fscn"},
+    {"word": "qopchypcho", "skeleton": "pfvfv"},
+    {"word": "ypcheey", "skeleton": "fv"},
+    {"word": "olcfholy", "skeleton": "l?btl"},
+    {"word": "te", "skeleton": "s"},
+    {"word": "rokyd", "skeleton": "scrn"},
+    {"word": "kyty", "skeleton": "rs", "note": "matches rosa/ruta but f9v is viola"},
+    {"word": "chshoty", "skeleton": "vms"}
+  ],
+  "very_rare_words": [
+    {"word": "qofol", "total": 2, "pages": ["f9v", "f85r1"]},
+    {"word": "toldy", "total": 2, "pages": ["f43r", "f9v"]},
+    {"word": "odol", "total": 2, "pages": ["f9v", "f93r"]},
+    {"word": "qochol", "total": 2, "pages": ["f25v", "f9v"]},
+    {"word": "ctchy", "total": 2, "pages": ["f9v", "f42v"]},
+    {"word": "ypchy", "total": 4, "pages": ["f68v2", "f9v", "f52r"]},
+    {"word": "cthod", "total": 4, "pages": ["f9v", "f8v", "f9r"]},
+    {"word": "chyty", "total": 4, "pages": ["f9v", "f16v", "f34r"]},
+    {"word": "ksheody", "total": 5, "pages": ["f9v", "f54r", "f106v"]},
+    {"word": "ytoldy", "total": 5, "pages": ["f9v", "f2r", "f52r"]}
+  ],
+  "key_finding": "No word unique or rare on f9v has consonant skeleton 'vl' matching viola. The word chol (skeleton vl) appears 397 times across 151 pages — too common to be a plant name. The viola identification from Phase 5 is not confirmed by page-specific vocabulary analysis.",
+  "chol_frequency": {"total": 397, "pages": 151, "note": "3rd most common word in manuscript"}
+}

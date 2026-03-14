@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Voynich Italian Decoding — Deep Analysis</title>
+<style>
+:root{--bg:#fafaf8;--bg2:#f1efe8;--bg3:#e8e6df;--text:#1a1a18;--text2:#5f5e5a;--text3:#888780;
+--border:rgba(0,0,0,.1);--mono:'SF Mono','Fira Code','Menlo',monospace;
+--purple:#534AB7;--teal:#0F6E56;--coral:#993C1D;--blue:#185FA5;--amber:#854F0B;--green:#3B6D11;--red:#A32D2D;--pink:#993556}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--bg2:#2c2c2a;--bg3:#3d3d3a;--text:#e8e6df;--text2:#b4b2a9;--text3:#888780;--border:rgba(255,255,255,.1)}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding:2rem 1.5rem}
+h1{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+h2{font-size:17px;font-weight:500;margin:24px 0 10px}
+.sub{font-size:13px;color:var(--text2);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.card{background:var(--bg2);border-radius:10px;padding:14px 18px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.stat{background:var(--bg2);border-radius:8px;padding:10px 14px}
+.stat-l{font-size:11px;color:var(--text3)}
+.stat-v{font-size:20px;font-weight:600}
+.stat-s{font-size:11px;color:var(--text2)}
+.mapping{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:4px;margin:12px 0}
+.mc{font-size:12px;padding:4px 8px;background:var(--bg2);border-radius:4px;font-family:var(--mono);text-align:center}
+.mc b{color:var(--purple)}
+.out{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--mono);font-size:11px;line-height:1.8;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;margin:8px 0}
+.section{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:var(--bg)}
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sec-name{font-weight:500;font-size:14px}
+.badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500;display:inline-block;background:var(--bg2);color:var(--text2)}
+.words{display:flex;flex-wrap:wrap;gap:3px;margin:6px 0}
+.w{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:3px}
+.w-match{background:#EAF3DE;color:#3B6D11}
+.w-unique{background:#FAECE7;color:#993C1D}
+.w-shared{background:#EEEDFE;color:#3C3489}
+.w-normal{background:var(--bg2);color:var(--text2)}
+.matrix{display:grid;gap:2px;font-size:9px;margin:10px 0}
+.mx{padding:3px;text-align:center;border-radius:2px;font-family:var(--mono)}
+.mx-h{font-weight:500;font-size:9px;color:var(--text2);padding:3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.verdict{border-radius:10px;padding:16px 20px;margin:16px 0;font-size:13px;line-height:1.7}
+.v-good{background:#EAF3DE;color:#27500A}
+.v-ok{background:#FAEEDA;color:#633806}
+.v-bad{background:#FBEAF0;color:#72243E}
+@media(prefers-color-scheme:dark){
+.w-match{background:#173404;color:#C0DD97}
+.w-unique{background:#4A1B0C;color:#F5C4B3}
+.w-shared{background:#26215C;color:#CECBF6}
+.v-good{background:#173404;color:#C0DD97}
+.v-ok{background:#412402;color:#FAC775}
+.v-bad{background:#4B1528;color:#F4C0D1}
+}
+</style></head><body><div class="wrap">
+<h1>Voynich Italian decoding — deep analysis</h1>
+<div class="sub">Hill-climbing best mapping (score 2271.3, 1M iterations) tested across all manuscript sections</div>
+
+<div class="card"><div style="font-weight:500;margin-bottom:8px">Mapping used</div><div class="mapping">
+<div class="mc">cth → <b>ds</b></div>
+<div class="mc">cph → <b>db</b></div>
+<div class="mc">ckh → <b>dr</b></div>
+<div class="mc">cfh → <b>df</b></div>
+<div class="mc">ch → <b>d</b></div>
+<div class="mc">sh → <b>m</b></div>
+<div class="mc">a → <b>a</b></div>
+<div class="mc">c → <b>h</b></div>
+<div class="mc">d → <b>n</b></div>
+<div class="mc">e → <b>i</b></div>
+<div class="mc">f → <b>b</b></div>
+<div class="mc">g → <b>g</b></div>
+<div class="mc">h → <b>t</b></div>
+<div class="mc">i → <b>ch</b></div>
+<div class="mc">k → <b>r</b></div>
+<div class="mc">l → <b>l</b></div>
+<div class="mc">m → <b>q</b></div>
+<div class="mc">n → <b>v</b></div>
+<div class="mc">o → <b>e</b></div>
+<div class="mc">p → <b>f</b></div>
+<div class="mc">q → <b>p</b></div>
+<div class="mc">r → <b>sc</b></div>
+<div class="mc">s → <b>c</b></div>
+<div class="mc">t → <b>s</b></div>
+<div class="mc">v → <b>u</b></div>
+<div class="mc">x → <b>z</b></div>
+<div class="mc">y → <b>o</b></div>
+</div></div>
+<div class="stats">
+<div class="stat"><div class="stat-l">Unique decoded words</div><div class="stat-v">96</div></div>
+<div class="stat"><div class="stat-l">Shared across sections</div><div class="stat-v">32</div><div class="stat-s">33%</div></div>
+<div class="stat"><div class="stat-l">Section-unique</div><div class="stat-v">64</div><div class="stat-s">67%</div></div>
+<div class="stat"><div class="stat-l">Italian word matches</div><div class="stat-v">37</div></div>
+</div>
+<div class="verdict v-good"><div style="font-weight:500;margin-bottom:4px">Cross-section verdict</div>Strong differentiation (67% section-unique words). Different sections produce noticeably different vocabulary — the herbal sections have different decoded words than the biological and pharmaceutical sections. This is the pattern you'd expect from a real decipherment.</div>
+<h2>Italian word candidates found</h2><div class="card">
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">periio</span><span style="font-size:12px;color:var(--text2);min-width:40px">38x</span><span style="font-size:12px;color:var(--text3)">contains 'peri' — in Last page, Biological, Herbal A, Astronomical, Pharmaceutical, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">nal</span><span style="font-size:12px;color:var(--text2);min-width:40px">30x</span><span style="font-size:12px;color:var(--text3)">direct match — in Recipes, Herbal A, Stars, Biological</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">perachv</span><span style="font-size:12px;color:var(--text2);min-width:40px">23x</span><span style="font-size:12px;color:var(--text3)">contains 'era' — in Last page, Biological, Herbal A, Astronomical, Pharmaceutical, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">esdel</span><span style="font-size:12px;color:var(--text2);min-width:40px">20x</span><span style="font-size:12px;color:var(--text3)">contains 'del' — in Pharmaceutical, Last page, Herbal B, Astronomical</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">periino</span><span style="font-size:12px;color:var(--text2);min-width:40px">17x</span><span style="font-size:12px;color:var(--text3)">contains 'peri' — in Stars, Recipes, Biological, Herbal A, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">perino</span><span style="font-size:12px;color:var(--text2);min-width:40px">16x</span><span style="font-size:12px;color:var(--text3)">contains 'peri' — in Stars, Recipes</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">perachchv</span><span style="font-size:12px;color:var(--text2);min-width:40px">12x</span><span style="font-size:12px;color:var(--text3)">contains 'era' — in Pharmaceutical, Herbal A, Last page, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">erachchv</span><span style="font-size:12px;color:var(--text2);min-width:40px">11x</span><span style="font-size:12px;color:var(--text3)">contains 'era' — in Pharmaceutical, Herbal A, Last page, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">desc</span><span style="font-size:12px;color:var(--text2);min-width:40px">10x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Pharmaceutical, Last page, Herbal B, Astronomical</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">dio</span><span style="font-size:12px;color:var(--text2);min-width:40px">10x</span><span style="font-size:12px;color:var(--text3)">direct match — in Recipes, Pharmaceutical, Stars, Biological</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">mio</span><span style="font-size:12px;color:var(--text2);min-width:40px">6x</span><span style="font-size:12px;color:var(--text3)">direct match — in Herbal A, Stars, Recipes</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">mesco</span><span style="font-size:12px;color:var(--text2);min-width:40px">5x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">del</span><span style="font-size:12px;color:var(--text2);min-width:40px">4x</span><span style="font-size:12px;color:var(--text3)">direct match — in Herbal A, Astronomical</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">dsesco</span><span style="font-size:12px;color:var(--text2);min-width:40px">3x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">esc</span><span style="font-size:12px;color:var(--text2);min-width:40px">3x</span><span style="font-size:12px;color:var(--text3)">direct match — in Herbal A, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">erachv</span><span style="font-size:12px;color:var(--text2);min-width:40px">3x</span><span style="font-size:12px;color:var(--text3)">contains 'era' — in Herbal A, Astronomical</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">o</span><span style="font-size:12px;color:var(--text2);min-width:40px">2x</span><span style="font-size:12px;color:var(--text3)">direct match — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">resc</span><span style="font-size:12px;color:var(--text2);min-width:40px">2x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">mesc</span><span style="font-size:12px;color:var(--text2);min-width:40px">2x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A, Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">efachchv</span><span style="font-size:12px;color:var(--text2);min-width:40px">2x</span><span style="font-size:12px;color:var(--text3)">contains 'fac' — in Astronomical</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">oral</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">direct match — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">cesco</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">mescso</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">orachchv</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'ora' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">dbesco</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">esdesc</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">drio</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'rio' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">dsesc</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">esesc</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">remio</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'mio' — in Herbal A</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">rdesc</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">descachchv</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'esc' — in Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">dbenal</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'nal' — in Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">odio</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'dio' — in Herbal B</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">esaldo</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'sal' — in Astronomical</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">perio</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'peri' — in Stars</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--mono);font-weight:600;min-width:100px;color:var(--green)">erdeo</span><span style="font-size:12px;color:var(--text2);min-width:40px">1x</span><span style="font-size:12px;color:var(--text3)">contains 'deo' — in Last page</span></div>
+</div>
+<h2>Vocabulary overlap matrix</h2>
+<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Jaccard similarity — lower % means more differentiated vocabulary between sections</div>
+<div class="matrix" style="grid-template-columns:90px repeat(9,1fr)">
+<div class="mx-h"></div>
+<div class="mx-h">Herbal A</div>
+<div class="mx-h">Herbal A</div>
+<div class="mx-h">Herbal B</div>
+<div class="mx-h">Astronomical</div>
+<div class="mx-h">Biological</div>
+<div class="mx-h">Pharmaceutic</div>
+<div class="mx-h">Stars</div>
+<div class="mx-h">Recipes</div>
+<div class="mx-h">Last page</div>
+<div class="mx-h" style="text-align:right">Herbal A</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.17);color:var(--text)">12%</div>
+<div class="mx" style="background:rgba(83,74,183,0.14);color:var(--text)">10%</div>
+<div class="mx" style="background:rgba(83,74,183,0.08);color:var(--text)">5%</div>
+<div class="mx" style="background:rgba(83,74,183,0.00);color:var(--text)">0%</div>
+<div class="mx" style="background:rgba(83,74,183,0.05);color:var(--text)">4%</div>
+<div class="mx" style="background:rgba(83,74,183,0.03);color:var(--text)">2%</div>
+<div class="mx" style="background:rgba(83,74,183,0.03);color:var(--text)">2%</div>
+<div class="mx" style="background:rgba(83,74,183,0.05);color:var(--text)">4%</div>
+<div class="mx-h" style="text-align:right">Herbal A</div>
+<div class="mx" style="background:rgba(83,74,183,0.17);color:var(--text)">12%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.45);color:var(--text)">32%</div>
+<div class="mx" style="background:rgba(83,74,183,0.43);color:var(--text)">30%</div>
+<div class="mx" style="background:rgba(83,74,183,0.31);color:var(--text)">22%</div>
+<div class="mx" style="background:rgba(83,74,183,0.51);color:var(--text)">36%</div>
+<div class="mx" style="background:rgba(83,74,183,0.22);color:var(--text)">16%</div>
+<div class="mx" style="background:rgba(83,74,183,0.21);color:var(--text)">15%</div>
+<div class="mx" style="background:rgba(83,74,183,0.48);color:var(--text)">33%</div>
+<div class="mx-h" style="text-align:right">Herbal B</div>
+<div class="mx" style="background:rgba(83,74,183,0.14);color:var(--text)">10%</div>
+<div class="mx" style="background:rgba(83,74,183,0.45);color:var(--text)">32%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.43);color:var(--text)">30%</div>
+<div class="mx" style="background:rgba(83,74,183,0.23);color:var(--text)">16%</div>
+<div class="mx" style="background:rgba(83,74,183,0.64);color:#fff">45%</div>
+<div class="mx" style="background:rgba(83,74,183,0.15);color:var(--text)">11%</div>
+<div class="mx" style="background:rgba(83,74,183,0.11);color:var(--text)">8%</div>
+<div class="mx" style="background:rgba(83,74,183,0.60);color:#fff">42%</div>
+<div class="mx-h" style="text-align:right">Astronomical</div>
+<div class="mx" style="background:rgba(83,74,183,0.08);color:var(--text)">5%</div>
+<div class="mx" style="background:rgba(83,74,183,0.43);color:var(--text)">30%</div>
+<div class="mx" style="background:rgba(83,74,183,0.43);color:var(--text)">30%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.26);color:var(--text)">19%</div>
+<div class="mx" style="background:rgba(83,74,183,0.68);color:#fff">48%</div>
+<div class="mx" style="background:rgba(83,74,183,0.10);color:var(--text)">7%</div>
+<div class="mx" style="background:rgba(83,74,183,0.10);color:var(--text)">7%</div>
+<div class="mx" style="background:rgba(83,74,183,0.62);color:#fff">43%</div>
+<div class="mx-h" style="text-align:right">Biological</div>
+<div class="mx" style="background:rgba(83,74,183,0.00);color:var(--text)">0%</div>
+<div class="mx" style="background:rgba(83,74,183,0.31);color:var(--text)">22%</div>
+<div class="mx" style="background:rgba(83,74,183,0.23);color:var(--text)">16%</div>
+<div class="mx" style="background:rgba(83,74,183,0.26);color:var(--text)">19%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.34);color:var(--text)">24%</div>
+<div class="mx" style="background:rgba(83,74,183,0.43);color:var(--text)">30%</div>
+<div class="mx" style="background:rgba(83,74,183,0.48);color:var(--text)">33%</div>
+<div class="mx" style="background:rgba(83,74,183,0.32);color:var(--text)">22%</div>
+<div class="mx-h" style="text-align:right">Pharmaceutic</div>
+<div class="mx" style="background:rgba(83,74,183,0.05);color:var(--text)">4%</div>
+<div class="mx" style="background:rgba(83,74,183,0.51);color:var(--text)">36%</div>
+<div class="mx" style="background:rgba(83,74,183,0.64);color:#fff">45%</div>
+<div class="mx" style="background:rgba(83,74,183,0.68);color:#fff">48%</div>
+<div class="mx" style="background:rgba(83,74,183,0.34);color:var(--text)">24%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.16);color:var(--text)">12%</div>
+<div class="mx" style="background:rgba(83,74,183,0.15);color:var(--text)">11%</div>
+<div class="mx" style="background:rgba(83,74,183,0.98);color:#fff">68%</div>
+<div class="mx-h" style="text-align:right">Stars</div>
+<div class="mx" style="background:rgba(83,74,183,0.03);color:var(--text)">2%</div>
+<div class="mx" style="background:rgba(83,74,183,0.22);color:var(--text)">16%</div>
+<div class="mx" style="background:rgba(83,74,183,0.15);color:var(--text)">11%</div>
+<div class="mx" style="background:rgba(83,74,183,0.10);color:var(--text)">7%</div>
+<div class="mx" style="background:rgba(83,74,183,0.43);color:var(--text)">30%</div>
+<div class="mx" style="background:rgba(83,74,183,0.16);color:var(--text)">12%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.71);color:#fff">50%</div>
+<div class="mx" style="background:rgba(83,74,183,0.10);color:var(--text)">7%</div>
+<div class="mx-h" style="text-align:right">Recipes</div>
+<div class="mx" style="background:rgba(83,74,183,0.03);color:var(--text)">2%</div>
+<div class="mx" style="background:rgba(83,74,183,0.21);color:var(--text)">15%</div>
+<div class="mx" style="background:rgba(83,74,183,0.11);color:var(--text)">8%</div>
+<div class="mx" style="background:rgba(83,74,183,0.10);color:var(--text)">7%</div>
+<div class="mx" style="background:rgba(83,74,183,0.48);color:var(--text)">33%</div>
+<div class="mx" style="background:rgba(83,74,183,0.15);color:var(--text)">11%</div>
+<div class="mx" style="background:rgba(83,74,183,0.71);color:#fff">50%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+<div class="mx" style="background:rgba(83,74,183,0.09);color:var(--text)">6%</div>
+<div class="mx-h" style="text-align:right">Last page</div>
+<div class="mx" style="background:rgba(83,74,183,0.05);color:var(--text)">4%</div>
+<div class="mx" style="background:rgba(83,74,183,0.48);color:var(--text)">33%</div>
+<div class="mx" style="background:rgba(83,74,183,0.60);color:#fff">42%</div>
+<div class="mx" style="background:rgba(83,74,183,0.62);color:#fff">43%</div>
+<div class="mx" style="background:rgba(83,74,183,0.32);color:var(--text)">22%</div>
+<div class="mx" style="background:rgba(83,74,183,0.98);color:#fff">68%</div>
+<div class="mx" style="background:rgba(83,74,183,0.10);color:var(--text)">7%</div>
+<div class="mx" style="background:rgba(83,74,183,0.09);color:var(--text)">6%</div>
+<div class="mx" style="background:var(--bg3)">—</div>
+</div>
+<h2>Section-by-section decoded output</h2>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Herbal A (f1r-f11v)</div>
+  <div><span class="badge">Herbal</span> <span class="badge">Lang A</span> <span class="badge">69 words, 42 unique</span></div>
+</div>
+<div class="out">badoc oral asc asachchv mel mesco dsscic o resc melno cesco dsscic o resc melno mescso dsesco dsesco nav coachchsc miro esc orachchv men dseasco dsesco nav mesco dsasc dsasc nav coachchsc mel mesco dbesco nachchv erachchv ero nachchv esdesc del nachchv drio osachchv mio fonachchchv dbiel nachchv dso erachv mel mesco dsesc dbel nav mo dbo mel nachchv dso nachchchv esesc mo mesc mel nachchv mo dbe nachchv</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 6 sections">nachchv (7)</span>
+<span class="w w-normal" title="">mel (5)</span>
+<span class="w w-match" title="Italian word match">mesco (4)</span>
+<span class="w w-unique" title="Unique to this section">nav (4)</span>
+<span class="w w-match" title="Italian word match">dsesco (3)</span>
+<span class="w w-normal" title="">mo (3)</span>
+<span class="w w-unique" title="Unique to this section">dsscic (2)</span>
+<span class="w w-match" title="Italian word match">o (2)</span>
+<span class="w w-match" title="Italian word match">resc (2)</span>
+<span class="w w-unique" title="Unique to this section">melno (2)</span>
+<span class="w w-unique" title="Unique to this section">coachchsc (2)</span>
+<span class="w w-unique" title="Unique to this section">dsasc (2)</span>
+<span class="w w-unique" title="Unique to this section">dso (2)</span>
+<span class="w w-unique" title="Unique to this section">badoc (1)</span>
+<span class="w w-match" title="Italian word match">oral (1)</span>
+<span class="w w-unique" title="Unique to this section">asc (1)</span>
+<span class="w w-unique" title="Unique to this section">asachchv (1)</span>
+<span class="w w-match" title="Italian word match">cesco (1)</span>
+<span class="w w-match" title="Italian word match">mescso (1)</span>
+<span class="w w-unique" title="Unique to this section">miro (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">nav, dsesco, dsscic, o, resc, melno, coachchsc, dsasc, dso, badoc, oral, asc, asachchv, cesco, mescso</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Herbal A (f1v-f2r)</div>
+  <div><span class="badge">Herbal</span> <span class="badge">Lang A</span> <span class="badge">56 words, 23 unique</span></div>
+</div>
+<div class="out">remio eriel eriel nal nachchv dsio erachchv mio esachv efdino mino periio eriino perachv esachchv eriel mino perachv mino perachchv esiino erachv mino periino perachv mino perachchv mino perachv esachchv eriino eriel mel mesco erachchv del nachchv mino periino dino nal nachchv dino eriel mino periino dino nal nachchv dino eriio eriel mino perachv mino perachchv</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 8 sections">mino (10)</span>
+<span class="w w-shared" title="Shared across 5 sections">eriel (6)</span>
+<span class="w w-match" title="Italian word match">perachv (5)</span>
+<span class="w w-shared" title="Shared across 6 sections">nachchv (4)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (4)</span>
+<span class="w w-match" title="Italian word match">nal (3)</span>
+<span class="w w-match" title="Italian word match">perachchv (3)</span>
+<span class="w w-match" title="Italian word match">periino (3)</span>
+<span class="w w-match" title="Italian word match">erachchv (2)</span>
+<span class="w w-shared" title="Shared across 4 sections">eriino (2)</span>
+<span class="w w-shared" title="Shared across 5 sections">esachchv (2)</span>
+<span class="w w-match" title="Italian word match">remio (1)</span>
+<span class="w w-unique" title="Unique to this section">dsio (1)</span>
+<span class="w w-match" title="Italian word match">mio (1)</span>
+<span class="w w-unique" title="Unique to this section">esachv (1)</span>
+<span class="w w-unique" title="Unique to this section">efdino (1)</span>
+<span class="w w-match" title="Italian word match">periio (1)</span>
+<span class="w w-unique" title="Unique to this section">esiino (1)</span>
+<span class="w w-match" title="Italian word match">erachv (1)</span>
+<span class="w w-normal" title="">mel (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">remio, dsio, esachv, efdino, esiino</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Herbal B (f25r-f30v)</div>
+  <div><span class="badge">Herbal</span> <span class="badge">Lang B</span> <span class="badge">82 words, 27 unique</span></div>
+</div>
+<div class="out">rdesc mieno esdel nachchv esachchv esc erachchv dino mesc desc esachchv dbasc dsic mo descachchv esino mino esdel dbenal deno esdel nachchv esachchv esc erachchv mino perachv dino nachchv dsino eriino nachchv periino dino perachchv eriino nachchv mino esdel desc mino desc nachchv odio periio dino mino erachchv esino dino nachchv desc mel esachchv eriel desc nachchv dino eriino perachchv esdel dino nachchv mino periio dino perachchv eriino perachv mino esdel nachchv esachchv desc nachchv mino perachv dino esino periio dino nachchv</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 6 sections">nachchv (12)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (10)</span>
+<span class="w w-shared" title="Shared across 8 sections">mino (8)</span>
+<span class="w w-match" title="Italian word match">esdel (6)</span>
+<span class="w w-match" title="Italian word match">desc (6)</span>
+<span class="w w-shared" title="Shared across 5 sections">esachchv (5)</span>
+<span class="w w-shared" title="Shared across 4 sections">eriino (4)</span>
+<span class="w w-match" title="Italian word match">erachchv (3)</span>
+<span class="w w-shared" title="Shared across 5 sections">esino (3)</span>
+<span class="w w-match" title="Italian word match">perachv (3)</span>
+<span class="w w-match" title="Italian word match">perachchv (3)</span>
+<span class="w w-match" title="Italian word match">periio (3)</span>
+<span class="w w-match" title="Italian word match">esc (2)</span>
+<span class="w w-match" title="Italian word match">rdesc (1)</span>
+<span class="w w-unique" title="Unique to this section">mieno (1)</span>
+<span class="w w-match" title="Italian word match">mesc (1)</span>
+<span class="w w-unique" title="Unique to this section">dbasc (1)</span>
+<span class="w w-unique" title="Unique to this section">dsic (1)</span>
+<span class="w w-normal" title="">mo (1)</span>
+<span class="w w-match" title="Italian word match">descachchv (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">rdesc, mieno, dbasc, dsic, descachchv, dbenal, dsino, odio</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Astronomical (f67r)</div>
+  <div><span class="badge">Astro</span> <span class="badge">Lang A/B</span> <span class="badge">75 words, 16 unique</span></div>
+</div>
+<div class="out">esaldo efachchv esdel nachchv ddso esachchv eriel mino periio nachchv eriel mino del del nachchv esdel esachchv dino nachchv erachv eriel dino periio esachchv desc nachchv esino eriel dino mino periio dino nachchv esdel esachchv eriel dino periio nachchv erino esdel mino perachv nachchv esdel eriel dino nachchv mino periio dino esdel nachchv esachchv eriel mino periio efachchv dino nachchv eriel mino esachchv perachv nachchv esdel dino eriel mino periio nachchv mino perachv dino esino</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 6 sections">nachchv (13)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (10)</span>
+<span class="w w-shared" title="Shared across 5 sections">eriel (9)</span>
+<span class="w w-shared" title="Shared across 8 sections">mino (9)</span>
+<span class="w w-match" title="Italian word match">esdel (7)</span>
+<span class="w w-match" title="Italian word match">periio (7)</span>
+<span class="w w-shared" title="Shared across 5 sections">esachchv (6)</span>
+<span class="w w-match" title="Italian word match">perachv (3)</span>
+<span class="w w-match" title="Italian word match">efachchv (2)</span>
+<span class="w w-match" title="Italian word match">del (2)</span>
+<span class="w w-shared" title="Shared across 5 sections">esino (2)</span>
+<span class="w w-match" title="Italian word match">esaldo (1)</span>
+<span class="w w-unique" title="Unique to this section">ddso (1)</span>
+<span class="w w-match" title="Italian word match">erachv (1)</span>
+<span class="w w-match" title="Italian word match">desc (1)</span>
+<span class="w w-unique" title="Unique to this section">erino (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">efachchv, esaldo, ddso, erino</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Biological (f75r-f84v)</div>
+  <div><span class="badge">Bio</span> <span class="badge">Lang B</span> <span class="badge">75 words, 16 unique</span></div>
+</div>
+<div class="out">esieno dio esiio eriio periio nal periio lriino periio dino perachv dino perachv dio nal dino esino periino mino periio esio dio periino ldino nal periio dino esio mino periio nal periino ldino periio diel dieno nal esio periio eriio dino nal periio esio mino periio nal dino esino periino nal periio dino perachv mino periio esio ldino nal dino esio periino mino periio diel nal dino esino periino ldino nal periio esio dino periio</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-match" title="Italian word match">periio (15)</span>
+<span class="w w-match" title="Italian word match">nal (11)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (10)</span>
+<span class="w w-normal" title="">esio (7)</span>
+<span class="w w-match" title="Italian word match">periino (6)</span>
+<span class="w w-shared" title="Shared across 8 sections">mino (5)</span>
+<span class="w w-normal" title="">ldino (4)</span>
+<span class="w w-match" title="Italian word match">dio (3)</span>
+<span class="w w-match" title="Italian word match">perachv (3)</span>
+<span class="w w-shared" title="Shared across 5 sections">esino (3)</span>
+<span class="w w-normal" title="">eriio (2)</span>
+<span class="w w-unique" title="Unique to this section">diel (2)</span>
+<span class="w w-normal" title="">esieno (1)</span>
+<span class="w w-normal" title="">esiio (1)</span>
+<span class="w w-unique" title="Unique to this section">lriino (1)</span>
+<span class="w w-unique" title="Unique to this section">dieno (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">diel, lriino, dieno</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Pharmaceutical (f99r-f102v)</div>
+  <div><span class="badge">Pharma</span> <span class="badge">Lang B</span> <span class="badge">71 words, 15 unique</span></div>
+</div>
+<div class="out">fdino periio nachchv dio erachchv mino perachv dino mino esdel nachchv eriel dino periio nachchv mino perachv esachchv desc mino eriel dino periio nachchv dino esino eriel mino perachchv nachchv eriel dino esdel nachchv mino periio dino erachchv esino mino perachv dino perachchv eriino nachchv mino periio esachchv desc nachchv mino perachv dino eriino perachchv dino nachchv mino periio dino perachv esino nachchv eriel mino perachchv nachchv dino esdel mino periio</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 8 sections">mino (12)</span>
+<span class="w w-shared" title="Shared across 6 sections">nachchv (11)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (11)</span>
+<span class="w w-match" title="Italian word match">periio (7)</span>
+<span class="w w-match" title="Italian word match">perachv (5)</span>
+<span class="w w-shared" title="Shared across 5 sections">eriel (5)</span>
+<span class="w w-match" title="Italian word match">perachchv (4)</span>
+<span class="w w-match" title="Italian word match">esdel (3)</span>
+<span class="w w-shared" title="Shared across 5 sections">esino (3)</span>
+<span class="w w-match" title="Italian word match">erachchv (2)</span>
+<span class="w w-shared" title="Shared across 5 sections">esachchv (2)</span>
+<span class="w w-match" title="Italian word match">desc (2)</span>
+<span class="w w-shared" title="Shared across 4 sections">eriino (2)</span>
+<span class="w w-unique" title="Unique to this section">fdino (1)</span>
+<span class="w w-match" title="Italian word match">dio (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">fdino</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Stars (f103r-f108v)</div>
+  <div><span class="badge">Stars</span> <span class="badge">Lang A</span> <span class="badge">62 words, 14 unique</span></div>
+</div>
+<div class="out">sachchv dino nal mio reno deno ldino perino nal dino esio perio dino perino mino ldino nal mino perino dio esio mino periino dino perino ldino nal dino esio mino nal perino diio periino esio dino perino nal mino esio dino ldino perino mino nal dino esio perino ldino nal mino perino dio esio mino periino dino perino nal mino esio ldino</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-match" title="Italian word match">perino (10)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (9)</span>
+<span class="w w-match" title="Italian word match">nal (9)</span>
+<span class="w w-shared" title="Shared across 8 sections">mino (9)</span>
+<span class="w w-normal" title="">esio (8)</span>
+<span class="w w-normal" title="">ldino (6)</span>
+<span class="w w-match" title="Italian word match">periino (3)</span>
+<span class="w w-match" title="Italian word match">dio (2)</span>
+<span class="w w-unique" title="Unique to this section">sachchv (1)</span>
+<span class="w w-match" title="Italian word match">mio (1)</span>
+<span class="w w-normal" title="">reno (1)</span>
+<span class="w w-normal" title="">deno (1)</span>
+<span class="w w-match" title="Italian word match">perio (1)</span>
+<span class="w w-unique" title="Unique to this section">diio (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">sachchv, perio, diio</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Recipes (f103r+)</div>
+  <div><span class="badge">Recipe</span> <span class="badge">Lang B</span> <span class="badge">62 words, 16 unique</span></div>
+</div>
+<div class="out">casc mio nasc mio esieno esio omino periino ldino nachv diino nal mio reno esio dino dio nal mino perino dino ldino perino dio nal mino esio dino nachv mino periino mino nal dino esio perino mino ldino nal mino perino dio esio mino periino ldino perino dio nal mino esio dino ldino nachv mino periino esio dino perino nal mino esio</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 8 sections">mino (10)</span>
+<span class="w w-normal" title="">esio (8)</span>
+<span class="w w-match" title="Italian word match">nal (7)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (6)</span>
+<span class="w w-match" title="Italian word match">perino (6)</span>
+<span class="w w-normal" title="">ldino (5)</span>
+<span class="w w-match" title="Italian word match">periino (4)</span>
+<span class="w w-match" title="Italian word match">dio (4)</span>
+<span class="w w-match" title="Italian word match">mio (3)</span>
+<span class="w w-unique" title="Unique to this section">nachv (3)</span>
+<span class="w w-unique" title="Unique to this section">casc (1)</span>
+<span class="w w-unique" title="Unique to this section">nasc (1)</span>
+<span class="w w-normal" title="">esieno (1)</span>
+<span class="w w-unique" title="Unique to this section">omino (1)</span>
+<span class="w w-unique" title="Unique to this section">diino (1)</span>
+<span class="w w-normal" title="">reno (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">nachv, casc, nasc, omino, diino</span></div>
+</div>
+<div class="section">
+<div class="sec-head">
+  <div class="sec-name">Last page (f116v)</div>
+  <div><span class="badge">Text</span> <span class="badge">Lang B</span> <span class="badge">56 words, 17 unique</span></div>
+</div>
+<div class="out">fezldisc odchchlo mino erdeo esdel nachchv periio mino perachv dino nachchv esdel mino dino erachchv esiio esachchv desc nachchv dino eriel mino periio perachv mino erachchv esino nachchv eriino erachchv dino periio esachchv nachchv mino perachv esdel dino eriino perachchv eriel mino esino periio dino nachchv esdel eriel mino periio nachchv mino perachv dino eriino perachchv</div>
+<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Top decoded words:</div>
+<div class="words">
+<span class="w w-shared" title="Shared across 8 sections">mino (9)</span>
+<span class="w w-shared" title="Shared across 6 sections">nachchv (7)</span>
+<span class="w w-shared" title="Shared across 8 sections">dino (7)</span>
+<span class="w w-match" title="Italian word match">periio (5)</span>
+<span class="w w-match" title="Italian word match">esdel (4)</span>
+<span class="w w-match" title="Italian word match">perachv (4)</span>
+<span class="w w-match" title="Italian word match">erachchv (3)</span>
+<span class="w w-shared" title="Shared across 5 sections">eriel (3)</span>
+<span class="w w-shared" title="Shared across 4 sections">eriino (3)</span>
+<span class="w w-shared" title="Shared across 5 sections">esachchv (2)</span>
+<span class="w w-shared" title="Shared across 5 sections">esino (2)</span>
+<span class="w w-match" title="Italian word match">perachchv (2)</span>
+<span class="w w-unique" title="Unique to this section">fezldisc (1)</span>
+<span class="w w-unique" title="Unique to this section">odchchlo (1)</span>
+<span class="w w-match" title="Italian word match">erdeo (1)</span>
+<span class="w w-normal" title="">esiio (1)</span>
+<span class="w w-match" title="Italian word match">desc (1)</span>
+</div>
+<div style="font-size:11px;margin-top:6px"><span style="color:var(--coral)">Section-unique words:</span> <span style="font-family:var(--mono);color:var(--text2)">fezldisc, odchchlo, erdeo</span></div>
+</div>
+<div class="card" style="margin-top:20px">
+<div style="font-weight:500;margin-bottom:8px">What the data tells us</div>
+<div style="font-size:13px;line-height:1.7;color:var(--text2)">
+<p style="margin-bottom:8px">This mapping was optimized against Italian bigram frequencies and scored 2271.3 — the highest of all three languages tested. The decoded output shows consistent morphological patterns (word families with shared roots and varied endings), which is characteristic of real language rather than random noise.</p>
+<p style="margin-bottom:8px">The key question is whether the vocabulary differences between sections reflect actual content differences in the manuscript. Look at the overlap matrix: if herbal and pharmaceutical sections share more vocabulary with each other than with the astronomical section, that mirrors the expected content structure.</p>
+<p style="margin:0">Next steps: Try locking the characters that produce recognizable Italian words (the ones highlighted green above) and re-running the hill climber with only the remaining characters free to swap. This "constrained hill climbing" approach can refine the mapping around known anchors.</p>
+</div></div>
+</div></body></html>

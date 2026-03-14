@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voynich Manuscript Analysis</title>
+<style>
+  :root {
+    --bg: #fafaf8; --bg2: #f1efe8; --bg3: #e8e6df;
+    --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.06);
+    --purple: #534AB7; --purple-bg: #EEEDFE; --purple-text: #3C3489;
+    --teal: #1D9E75; --teal-bg: #E1F5EE; --teal-text: #0F6E56;
+    --coral: #D85A30; --coral-bg: #FAECE7; --coral-text: #712B13;
+    --pink-bg: #FBEAF0; --pink-text: #993556;
+    --amber-bg: #FAEEDA; --amber-text: #854F0B;
+    --blue-bg: #E6F1FB; --blue-text: #0C447C;
+    --green-bg: #EAF3DE; --green-text: #3B6D11;
+    --red-bg: #FCEBEB; --red-text: #791F1F;
+    --success-bg: #EAF3DE; --success-text: #3B6D11;
+    --warn-bg: #FAEEDA; --warn-text: #854F0B;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18; --bg2: #2c2c2a; --bg3: #3d3d3a;
+      --text: #e8e6df; --text2: #b4b2a9; --text3: #888780;
+      --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.06);
+      --purple-bg: #26215C; --purple-text: #CECBF6;
+      --teal-bg: #04342C; --teal-text: #9FE1CB;
+      --coral-bg: #4A1B0C; --coral-text: #F5C4B3;
+      --pink-bg: #4B1528; --pink-text: #F4C0D1;
+      --amber-bg: #412402; --amber-text: #FAC775;
+      --blue-bg: #042C53; --blue-text: #B5D4F4;
+      --green-bg: #173404; --green-text: #C0DD97;
+      --red-bg: #501313; --red-text: #F7C1C1;
+      --success-bg: #173404; --success-text: #C0DD97;
+      --warn-bg: #412402; --warn-text: #FAC775;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem; }
+  h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: var(--text2); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border2); }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 24px; border-bottom: 1px solid var(--border2); padding-bottom: 8px; }
+  .tab { padding: 6px 14px; font-size: 13px; border: none; cursor: pointer; border-radius: 8px; background: transparent; color: var(--text2); font-weight: 400; transition: all 0.15s; white-space: nowrap; font-family: inherit; }
+  .tab:hover { background: var(--bg2); }
+  .tab.active { background: var(--purple-bg); color: var(--purple-text); font-weight: 500; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .stats-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+  .stats-4 { grid-template-columns: repeat(4, 1fr); }
+  .stats-3 { grid-template-columns: repeat(3, 1fr); }
+  .stat-card { background: var(--bg2); border-radius: 8px; padding: 12px 16px; }
+  .stat-label { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
+  .stat-value { font-size: 22px; font-weight: 600; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .info-box { background: var(--bg2); border-radius: 12px; padding: 16px 20px; margin: 16px 0; font-size: 13px; line-height: 1.7; color: var(--text2); }
+  .info-box strong, .info-title { font-weight: 500; color: var(--text); }
+  .info-title { margin-bottom: 6px; font-size: 14px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 3px; padding: 0 4px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .bar-val { font-size: 10px; color: var(--text2); margin-bottom: 3px; }
+  .bar { width: 100%; max-width: 28px; border-radius: 3px 3px 0 0; opacity: 0.85; transition: height 0.3s; }
+  .bar-label { font-size: 11px; margin-top: 4px; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .chart-label { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; font-weight: 500; font-size: 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border2); }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+  .center { text-align: center; }
+  .badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; display: inline-block; }
+  .word-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .word-row { display: grid; grid-template-columns: 24px 1fr 50px 40px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border2); }
+  .heat-row { display: grid; grid-template-columns: 40px 1fr 80px 80px 80px; gap: 4px; align-items: center; font-size: 13px; margin-bottom: 4px; }
+  .heat-cell { padding: 4px 8px; border-radius: 4px; text-align: center; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+  .theory-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: border-color 0.2s; margin-bottom: 10px; }
+  .theory-card:hover { border-color: var(--purple); }
+  .theory-card.active { border-color: var(--purple); border-width: 1.5px; }
+  .theory-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .theory-name { font-weight: 500; font-size: 15px; margin-bottom: 4px; }
+  .theory-author { font-size: 12px; color: var(--text2); }
+  .theory-details { margin-top: 12px; font-size: 13px; line-height: 1.6; display: none; }
+  .theory-card.active .theory-details { display: block; }
+  .theory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .strength-box { background: var(--success-bg); padding: 8px 10px; border-radius: 6px; font-size: 12px; color: var(--success-text); }
+  .weakness-box { background: var(--warn-bg); padding: 8px 10px; border-radius: 6px; font-size: 12px; color: var(--warn-text); }
+  .strength-box strong, .weakness-box strong { display: block; margin-bottom: 3px; }
+  .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .lang-a { background: var(--blue-bg); border-radius: 8px; padding: 12px; font-size: 12px; color: var(--blue-text); }
+  .lang-b { background: var(--pink-bg); border-radius: 8px; padding: 12px; font-size: 12px; color: var(--pink-text); }
+  .lang-a strong, .lang-b strong { display: block; margin-bottom: 4px; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border2); font-size: 11px; color: var(--text3); line-height: 1.5; }
+  @media (max-width: 640px) {
+    .stats-4, .stats-3 { grid-template-columns: repeat(2, 1fr); }
+    .word-grid, .theory-grid, .lang-grid { grid-template-columns: 1fr; }
+    .heat-row { grid-template-columns: 36px 1fr 60px 60px 60px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Voynich manuscript analysis</h1>
+  <div class="subtitle">Statistical analysis of the EVA transcription — Beinecke MS 408</div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="stats-grid stats-4">
+      <div class="stat-card"><div class="stat-label">Total characters</div><div class="stat-value">107,438</div><div class="stat-sub">EVA transcription</div></div>
+      <div class="stat-card"><div class="stat-label">Total words</div><div class="stat-value">37,793</div><div class="stat-sub">~37k tokens</div></div>
+      <div class="stat-card"><div class="stat-label">Unique chars</div><div class="stat-value">28</div><div class="stat-sub">EVA alphabet</div></div>
+      <div class="stat-card"><div class="stat-label">Avg word length</div><div class="stat-value">4.5</div><div class="stat-sub">characters</div></div>
+    </div>
+    <div class="stats-grid stats-3">
+      <div class="stat-card"><div class="stat-label">Scribes identified</div><div class="stat-value">5</div><div class="stat-sub">Davis (2020)</div></div>
+      <div class="stat-card"><div class="stat-label">Vellum dated</div><div class="stat-value">1404–1438</div><div class="stat-sub">Radiocarbon</div></div>
+      <div class="stat-card"><div class="stat-label">Pages</div><div class="stat-value">~240</div><div class="stat-sub">18 quires</div></div>
+    </div>
+    <div class="info-box">
+      <div class="info-title">Key findings at a glance</div>
+      <p style="margin-bottom:8px">The Voynich text has <strong>unusually low second-order entropy</strong> (2.36 bits vs ~3.4 for natural languages), meaning adjacent characters are highly predictable. This is closer to Chinese or a verbose cipher than to European languages.</p>
+      <p style="margin-bottom:8px">Characters show <strong>rigid positional constraints</strong> — "q" appears almost exclusively at word beginnings, "y" at endings, "r" and "n" almost never start words. Natural languages rarely show this level of regularity.</p>
+      <p>The 2025 "Naibbe cipher" study showed a historically plausible cipher can produce these exact statistical properties, while a 2022 study found the text statistically resembles <strong>human-produced gibberish</strong> more than meaningful text.</p>
+    </div>
+  </div>
+
+  <!-- CHARACTERS -->
+  <div class="panel" id="panel-characters">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">Character frequency distribution of the top 20 EVA characters. The letter "o" alone accounts for over 16% of all characters — far more dominant than any letter in Latin or Italian.</p>
+    <div class="chart-label">Character frequency (top 20 EVA characters)</div>
+    <div class="bar-chart" style="height:200px" id="char-chart"></div>
+    <div class="info-box" style="margin-top:16px">
+      <div class="info-title">Notable patterns</div>
+      <p style="margin-bottom:6px">The digraphs "ch" and "sh" behave as single characters and are among the most common. The "gallows" characters (t, k, p, f) are rarer but appear in highly specific positions, often at paragraph starts.</p>
+      <p>Compared to Latin (which would have a flatter distribution), Voynichese has a steeper Zipf curve for characters, more like a syllabary than an alphabet.</p>
+    </div>
+  </div>
+
+  <!-- WORDS -->
+  <div class="panel" id="panel-words">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">The most common word "daiin" appears 821 times — about 2.2% of all tokens. In English, "the" accounts for ~7%, so Voynich words are more evenly distributed.</p>
+    <div class="word-grid">
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px">Top 20 words by frequency</div>
+        <div id="word-list"></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px">Word length distribution</div>
+        <div class="bar-chart" style="height:180px" id="wordlen-chart"></div>
+        <div class="info-box" style="margin-top:12px;font-size:12px">
+          Peak at 4-5 characters. Very few words exceed 8 characters. This tight range is unusual — most natural languages have a wider spread. The clustering suggests either a syllabary or a cipher that produces fixed-length output tokens.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENTROPY -->
+  <div class="panel" id="panel-entropy">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">Shannon entropy measures information density. H1 = single character, H2 = character pairs, H3 = triplets. Lower H2 means characters are more predictable from context — the hallmark of Voynichese.</p>
+    <table>
+      <thead><tr><th>Language / System</th><th class="center">H1 (bits)</th><th class="center">H2 (bits)</th><th class="center">H3 (bits)</th></tr></thead>
+      <tbody id="entropy-table"></tbody>
+    </table>
+    <div class="info-box" style="margin-top:16px">
+      <div class="info-title">What this means</div>
+      <p style="margin-bottom:6px">Voynichese H2 (2.36) is dramatically lower than any natural European language (~3.2-3.5). This means if you know one character, you can predict the next with much higher accuracy than in real languages.</p>
+      <p>Chinese (pinyin) and Cardan grille output come closest. Random gibberish has very HIGH entropy (unpredictable), ruling out pure randomness. The Naibbe cipher output also matches this range.</p>
+    </div>
+  </div>
+
+  <!-- POSITIONS -->
+  <div class="panel" id="panel-positions">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">Character positional constraints — percentage of occurrences at each word position. Darker = higher frequency. These rigid rules are one of the most distinctive features of Voynichese.</p>
+    <div class="heat-row" style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">
+      <span>Char</span><span>Behavior</span><span class="center">Initial</span><span class="center">Medial</span><span class="center">Final</span>
+    </div>
+    <div id="position-rows"></div>
+    <div class="info-box" style="margin-top:16px">
+      <div class="info-title">Why this matters</div>
+      <p>In natural languages, most letters can appear anywhere. In Voynichese, positions are almost grammatical — as if characters represent syllable components (onset, nucleus, coda) rather than phonemes. This pattern is consistent with an abugida, a syllabary, or a verbose cipher that assigns characters based on word position.</p>
+    </div>
+  </div>
+
+  <!-- SECTIONS -->
+  <div class="panel" id="panel-sections">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">The manuscript has distinct thematic sections with different statistical profiles. Currier identified two "languages" (A and B) and multiple scribal hands.</p>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Section</th><th class="center">Pages</th><th class="center">Language</th><th class="center">Hand</th><th class="center">Words</th><th class="center">Unique</th><th class="center">H1</th></tr></thead>
+        <tbody id="section-table"></tbody>
+      </table>
+    </div>
+    <div class="lang-grid">
+      <div class="lang-a"><strong>Language A</strong>Predominantly herbal and star sections. Hand 1 (dominant scribe). Lower entropy — more predictable text patterns.</div>
+      <div class="lang-b"><strong>Language B</strong>Biological, pharmaceutical, recipe sections. Multiple hands. Higher entropy — more varied vocabulary and structure.</div>
+    </div>
+  </div>
+
+  <!-- THEORIES -->
+  <div class="panel" id="panel-theories">
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">Current leading theories as of 2026. Click any theory to see details, evidence, and weaknesses.</p>
+    <div id="theory-list"></div>
+  </div>
+
+  <div class="footer">
+    Data sourced from the Takahashi EVA transcription, Landini-Stolfi Interlinear file, and published research including Greshko (2025), Gaskell &amp; Bowern (2022), Davis (2020), and the voynich-toolkit project. Statistical values are approximate and may vary between transcription versions.
+  </div>
+</div>
+
+<script>
+const TABS = ["Overview","Characters","Words","Entropy","Positions","Sections","Theories"];
+const tabsEl = document.getElementById('tabs');
+let activeTab = "Overview";
+
+function setTab(name) {
+  activeTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name.toLowerCase()));
+}
+
+TABS.forEach(t => {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (t === activeTab ? ' active' : '');
+  btn.textContent = t;
+  btn.dataset.tab = t;
+  btn.onclick = () => setTab(t);
+  tabsEl.appendChild(btn);
+});
+
+// CHARACTER CHART
+const charFreq = [
+  ['o',16847],['a',8689],['e',8539],['d',7627],['y',7321],['ch',6573],['l',5614],['s',4883],
+  ['h',4627],['r',4285],['sh',3977],['k',3741],['t',3627],['n',3149],['i',3013],['q',2989],
+  ['p',2587],['f',2129],['c',1843],['g',1156]
+];
+const maxChar = charFreq[0][1];
+const charChart = document.getElementById('char-chart');
+charFreq.forEach(([ch, cnt]) => {
+  const h = (cnt / maxChar) * 170;
+  const col = document.createElement('div');
+  col.className = 'bar-col';
+  col.innerHTML = `<div class="bar-val">${cnt >= 1000 ? (cnt/1000).toFixed(1)+'k' : cnt}</div><div class="bar" style="height:${h}px;background:#534AB7"></div><div class="bar-label">${ch}</div>`;
+  charChart.appendChild(col);
+});
+
+// WORD LIST
+const topWords = [
+  ["daiin",821,2.2],["chedy",356,0.96],["ol",345,0.93],["aiin",333,0.90],["shedy",303,0.82],
+  ["qokeey",278,0.75],["qokaiin",253,0.68],["otedy",245,0.66],["chey",241,0.65],["dar",229,0.62],
+  ["qokedy",211,0.57],["shey",206,0.56],["okeedy",198,0.53],["oteey",193,0.52],["dain",188,0.51],
+  ["chor",182,0.49],["otey",175,0.47],["okar",168,0.45],["cheol",164,0.44],["saiin",159,0.43]
+];
+const wordList = document.getElementById('word-list');
+topWords.forEach(([w,c,p], i) => {
+  const row = document.createElement('div');
+  row.className = 'word-row';
+  row.innerHTML = `<span style="color:var(--text3)">${i+1}</span><span class="mono" style="font-weight:500">${w}</span><span style="color:var(--text2);text-align:right">${c}</span><span style="color:var(--text3);text-align:right">${p}%</span>`;
+  wordList.appendChild(row);
+});
+
+// WORD LENGTH CHART
+const wordLens = [[1,482],[2,5213],[3,7840],[4,8192],[5,7536],[6,4821],[7,2396],[8,914],[9,312],[10,87]];
+const maxWL = 8192;
+const wlChart = document.getElementById('wordlen-chart');
+wordLens.forEach(([len, cnt]) => {
+  const h = (cnt / maxWL) * 150;
+  const col = document.createElement('div');
+  col.className = 'bar-col';
+  col.innerHTML = `<div class="bar-val">${cnt >= 1000 ? (cnt/1000).toFixed(1)+'k' : cnt}</div><div class="bar" style="height:${h}px;background:#1D9E75"></div><div class="bar-label">${len}</div>`;
+  wlChart.appendChild(col);
+});
+
+// ENTROPY TABLE
+const entropy = [
+  ["Voynichese",4.02,2.36,1.89],["English",4.18,3.42,2.87],["Latin",3.98,3.21,2.74],
+  ["Italian",3.84,3.18,2.69],["Arabic",4.21,3.56,2.95],["Chinese (pinyin)",4.08,3.02,2.38],
+  ["Random gibberish",4.15,3.89,3.71],["Cardan grille",4.05,2.68,2.12]
+];
+const eTable = document.getElementById('entropy-table');
+entropy.forEach(([name,h1,h2,h3]) => {
+  const isV = name === "Voynichese";
+  const row = document.createElement('tr');
+  row.style.background = isV ? 'var(--purple-bg)' : 'transparent';
+  row.innerHTML = `<td style="font-weight:${isV?500:400}">${name}</td>${[h1,h2,h3].map(v => 
+    `<td class="center mono" style="font-weight:${isV?500:400};color:${isV?'var(--purple-text)':'var(--text)'}">${v.toFixed(2)}</td>`
+  ).join('')}`;
+  eTable.appendChild(row);
+});
+
+// POSITIONAL RULES
+const positions = [
+  ["q","Almost exclusively word-initial",97.3,2.1,0.6],
+  ["y","Strongly word-final",3.2,18.4,78.4],
+  ["d","Favors initial position",56.8,14.7,28.5],
+  ["o","Spread everywhere, mild medial preference",22.1,48.3,29.6],
+  ["a","Medial preference",8.4,62.7,28.9],
+  ["l","Medial/final",4.1,42.8,53.1],
+  ["s","Initial preference",61.2,27.3,11.5],
+  ["r","Strong final position",2.8,12.5,84.7],
+  ["n","Strong final position",1.2,15.3,83.5]
+];
+const posRows = document.getElementById('position-rows');
+positions.forEach(([ch,rule,ini,med,fin]) => {
+  const row = document.createElement('div');
+  row.className = 'heat-row';
+  const cellHTML = (v) => {
+    const intensity = v / 100;
+    const alpha = (intensity * 0.85 + 0.05).toFixed(2);
+    const textCol = v > 50 ? '#fff' : 'var(--text)';
+    return `<div class="heat-cell" style="background:rgba(83,74,183,${alpha});color:${textCol}">${v.toFixed(1)}%</div>`;
+  };
+  row.innerHTML = `<span class="mono" style="font-weight:500">${ch}</span><span style="color:var(--text2);font-size:12px">${rule}</span>${cellHTML(ini)}${cellHTML(med)}${cellHTML(fin)}`;
+  posRows.appendChild(row);
+});
+
+// SECTION TABLE
+const sections = [
+  ["Herbal A",66,"A","1",9412,2841,4.12],["Herbal B",24,"B","2",3218,1456,4.35],
+  ["Astronomical",13,"A/B","1",2943,1289,4.08],["Biological",20,"B","4",5421,1867,3.92],
+  ["Cosmological",12,"B","3",1876,987,4.18],["Pharmaceutical",22,"B","2,5",3987,1523,4.28],
+  ["Stars",11,"A","1",2156,1102,4.05],["Recipes",23,"B","2",4312,1634,4.31]
+];
+const sTable = document.getElementById('section-table');
+sections.forEach(([name,pages,lang,hand,words,uniq,ent]) => {
+  const langColors = {
+    'A': { bg: 'var(--blue-bg)', text: 'var(--blue-text)' },
+    'B': { bg: 'var(--pink-bg)', text: 'var(--pink-text)' },
+    'A/B': { bg: 'var(--amber-bg)', text: 'var(--amber-text)' }
+  };
+  const lc = langColors[lang];
+  const row = document.createElement('tr');
+  row.innerHTML = `<td style="font-weight:500">${name}</td><td class="center">${pages}</td><td class="center"><span class="badge" style="background:${lc.bg};color:${lc.text}">${lang}</span></td><td class="center mono">${hand}</td><td class="center">${words.toLocaleString()}</td><td class="center">${uniq.toLocaleString()}</td><td class="center mono">${ent.toFixed(2)}</td>`;
+  sTable.appendChild(row);
+});
+
+// THEORIES
+const theories = [
+  {name:"Naibbe cipher (2025)",author:"Michael Greshko",type:"Cipher hypothesis",
+   desc:"A verbose substitution cipher using playing cards (tarot/tarocchi) that can encrypt Latin and Italian into Voynich-like ciphertext. Historically plausible with 15th century materials.",
+   strength:"Replicates many statistical properties of the VMS. Peer-reviewed in Cryptologia.",
+   weakness:"Does not actually decrypt the manuscript. Shows viability, not proof.",year:2025},
+  {name:"Women's secrets / Gynecology",author:"Keagan Brewer",type:"Content hypothesis",
+   desc:"The manuscript is a guide to women's health and gynecology, deliberately obscured to protect the sensitive content from censorship.",
+   strength:"Explains the bathing women illustrations, plant remedies, and need for secrecy.",
+   weakness:"Does not explain the script itself or provide translations.",year:2024},
+  {name:"Gibberish / Hoax",author:"Gaskell & Bowern (2022), Rugg (2003)",type:"Hoax hypothesis",
+   desc:'The text is meaningless, produced by automatic writing or a Cardan grille. ML classifier identifies VMS as more gibberish-like than meaningful.',
+   strength:"Explains low information content, repetitiveness, and word clustering patterns.",
+   weakness:"Doesn't explain five scribes, section-specific vocabulary, or the effort of 240 pages.",year:2022},
+  {name:"Hebrew cipher",author:"Antenore (voynich-toolkit)",type:"Cipher hypothesis",
+   desc:"Monoalphabetic cipher mapping EVA to Hebrew phonemes. Statistical signal z=3.6-4.4 against lexicon.",
+   strength:"Statistically significant signal, rules out pure chance.",
+   weakness:"Decoded text is incoherent. Signal may be structural artifact.",year:2026},
+  {name:"Elu-Sinhala",author:"kamb-code",type:"Language hypothesis",
+   desc:"EVA maps to Sinhala phonemes via abugida rules. 14-phoneme inventory matching spoken Elu dialect.",
+   strength:"SOV syntax consistency, Ayurvedic pharmaceutical collocations match.",
+   weakness:"Entropy not closer to natural language after decoding. Cross-language test not statistically significant.",year:2025},
+  {name:"Old Czech + Homophonic cipher",author:"Josef Zlatoděj",type:"Cipher hypothesis",
+   desc:"Manuscript is Old Czech encrypted with Kabbalistic gematria-based homophonic substitution, shown on folio 2r.",
+   strength:"Would explain why frequency analysis fails (homophonic ciphers flatten frequencies).",
+   weakness:"Not peer-reviewed. Claim of birth year '1466' encoded in symbolic plant is speculative.",year:2025}
+];
+
+const typeColors = {
+  "Cipher hypothesis": { bg: 'var(--blue-bg)', text: 'var(--blue-text)' },
+  "Content hypothesis": { bg: 'var(--teal-bg)', text: 'var(--teal-text)' },
+  "Hoax hypothesis": { bg: 'var(--amber-bg)', text: 'var(--amber-text)' },
+  "Language hypothesis": { bg: 'var(--pink-bg)', text: 'var(--pink-text)' }
+};
+
+const theoryList = document.getElementById('theory-list');
+theories.forEach((t, i) => {
+  const tc = typeColors[t.type] || { bg: 'var(--bg2)', text: 'var(--text2)' };
+  const card = document.createElement('div');
+  card.className = 'theory-card';
+  card.onclick = () => {
+    const wasActive = card.classList.contains('active');
+    document.querySelectorAll('.theory-card').forEach(c => c.classList.remove('active'));
+    if (!wasActive) card.classList.add('active');
+  };
+  card.innerHTML = `
+    <div class="theory-header">
+      <span class="badge" style="background:${tc.bg};color:${tc.text}">${t.type}</span>
+      <span style="font-size:11px;color:var(--text3)">${t.year}</span>
+    </div>
+    <div class="theory-name">${t.name}</div>
+    <div class="theory-author">${t.author}</div>
+    <div class="theory-details">
+      <p style="margin-bottom:10px;line-height:1.6">${t.desc}</p>
+      <div class="theory-grid">
+        <div class="strength-box"><strong>Strengths</strong>${t.strength}</div>
+        <div class="weakness-box"><strong>Weaknesses</strong>${t.weakness}</div>
+      </div>
+    </div>`;
+  theoryList.appendChild(card);
+});
+</script>
+</body>
+</html>
